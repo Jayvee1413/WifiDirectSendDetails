@@ -74,12 +74,24 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/ageLabel"/>
+
+                <TextView android:id="@+id/messageLabel"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/ageField"
+                    android:text="@string/message"
+                    android:paddingBottom="10dp"/>
+                <EditText
+                    android:id="@+id/messageField"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/messageLabel"/>
                 <Button
                     android:id="@+id/btn_send_data"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/send_data_to_server_button"
-                    android:layout_below="@id/ageField"/>
+                    android:layout_below="@id/messageField"/>
             </RelativeLayout>
         </ScrollView>
         <TextView

@@ -106,11 +106,8 @@ public class FileTransferService extends IntentService {
                 Log.d(WiFiDirectActivity.TAG, "Opening client socket - ");
                 socket.bind(null);
                 try {
-                    Log.e(WiFiDirectActivity.TAG, "HOST: " + host);
-                    Log.e(WiFiDirectActivity.TAG, "PORT: " + port);
                     socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 } catch(Exception e){
-                    Log.e(WiFiDirectActivity.TAG, "ERROR HEREEE");
                     Log.e(WiFiDirectActivity.TAG, "ERROR HEREEE");
                 }
 

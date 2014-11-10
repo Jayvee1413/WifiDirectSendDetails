@@ -18,5 +18,6 @@
     <string name="name">Name</string>
     <string name="address">Address</string>
     <string name="age">Age</string>
+    <string name="message">Message</string>
     <string name="send_data_to_server_button">Send Data To Peer</string>
 </resources>

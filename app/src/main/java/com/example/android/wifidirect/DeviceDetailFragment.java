@@ -151,6 +151,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 info.groupOwnerAddress.getHostAddress());
         serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
         getActivity().startService(serviceIntent);
+
     }
 
     @Override
@@ -196,14 +197,17 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             EditText mName = (EditText) mContentView.findViewById(R.id.nameField);
                             EditText mAddress = (EditText) mContentView.findViewById(R.id.addressField);
                             EditText mAge = (EditText) mContentView.findViewById(R.id.ageField);
+                            EditText mMessage = (EditText) mContentView.findViewById(R.id.messageField);
                             String name = mName.getText().toString();
                             String address = mAddress.getText().toString();
                             String age = mAge.getText().toString();
+                            String message = mMessage.getText().toString();
                             JSONObject data_object = new JSONObject();
                             try {
                                 data_object.put("name", name);
                                 data_object.put("address", address);
                                 data_object.put("age", age);
+                                data_object.put("message", message);
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -348,15 +352,23 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 intent.setAction(android.content.Intent.ACTION_VIEW);
                 intent.setDataAndType(Uri.parse("file://" + result), "image/*");
                 */
-                JSONObject data = null;
+                JSONObject json_data = null;
                 try {
-                    data = new JSONObject(result);
-                    String name = data.getString("name");
-                    String age = data.getString("age");
-                    String address = data.getString("address");
+                    json_data = new JSONObject(result);
+                    String name = json_data.getString("name");
+                    String age = json_data.getString("age");
+                    String address = json_data.getString("address");
+                    String message = json_data.getString("message");
                     Log.i(WiFiDirectActivity.TAG, "NAME: " + name);
                     Log.i(WiFiDirectActivity.TAG, "AGE: " + age);
                     Log.i(WiFiDirectActivity.TAG, "ADDRESS: " + address);
+                    Log.i(WiFiDirectActivity.TAG, "MESSAGE: " + message);
+
+
+                    DataDAO data_dao = new DataDAO(context);
+                    Data data = new Data(name, age, address, message);
+                    data_dao.addData(data);
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
