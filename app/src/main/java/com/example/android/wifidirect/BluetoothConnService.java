@@ -398,7 +398,7 @@ public class BluetoothConnService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[10000000];
             int bytes;
 
             // Keep listening to the InputStream while connected
@@ -427,6 +427,7 @@ public class BluetoothConnService {
                     connectionLost();
                     // Start the service over to restart listening mode
                     BluetoothConnService.this.start();
+                    mHandler.obtainMessage(HybridMANETDTN.BT_NEXT_PEER);
                     break;
                 }
             }

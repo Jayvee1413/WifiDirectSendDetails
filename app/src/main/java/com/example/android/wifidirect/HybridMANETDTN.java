@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +52,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     public static final int BT_MESSAGE_READ = 2;
     public static final int BT_MESSAGE_WRITE = 3;
     public static final int BT_MESSAGE_TOAST = 4;
+    public static final int BT_NEXT_PEER = 5;
     // Key names received from the BluetoothChatService Handler
     public static final String TOAST = "toast";
     // String buffer for outgoing messages
@@ -146,6 +148,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
+
+        bluetoothDevices = new ArrayList();
+
         // END FORBLUETOOTH
     }
 
@@ -217,8 +222,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     public void doBluetoothDiscovery() {
-        bluetoothDevices = new ArrayList();
-
         // If we're already discovering, stop it
         if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
@@ -245,7 +248,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
                 Log.d(HybridMANETDTN.TAG, "Discovered " + device.getName() + " " + device.getAddress());
-                bluetoothDevices.add(device.getAddress());
+                if (!bluetoothDevices.contains(device.getAddress())){
+                    bluetoothDevices.add(device.getAddress());
+                }
             }
             // When discovery is finished
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
@@ -254,15 +259,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     Toast.makeText(HybridMANETDTN.this, "No devices found via bluetooth", Toast.LENGTH_LONG).show();
                     Log.d(HybridMANETDTN.TAG, "No BT devices found");
                 } else {
-                    java.util.HashSet hs = new java.util.HashSet();
-                    hs.addAll(bluetoothDevices);
-                    bluetoothDevices.clear();
-                    bluetoothDevices.addAll(hs);
-                    java.util.Iterator iterator = (java.util.Iterator) bluetoothDevices.iterator();
-                    BluetoothSocket mmSocket = null;
-                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice("28:CC:01:20:52:5B");
-                    mConnService.connect(device);
-
+                    sendToBTPeers();
                 }
             }
         }
@@ -278,11 +275,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                         case BluetoothConnService.STATE_CONNECTED:
                             Log.d(TAG,"Connected!!!! Sending...");
 
-                            if (!BluetoothAdapter.getDefaultAdapter().getAddress().equals("28:CC:01:20:52:5B"))
-                            {
-                                Log.d(TAG,"Connected!!!! Sending...");
-                                sendBTMessage("TEST");
-                            }
+                            sendBTMessage("TEST");
+
 
                             //mConversationArrayAdapter.clear();
                             break;
@@ -302,14 +296,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     //mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case BT_MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
+                    //byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    //String readMessage = new String(readBuf, 0, msg.arg1);
                     //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                     break;
                 case BT_MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                             Toast.LENGTH_SHORT).show();
+                case BT_NEXT_PEER:
+                    if(bluetoothDevices.size() > 0) {
+                        bluetoothDevices.remove(0);
+                    }
+                    sendToBTPeers();
                     break;
             }
         }
@@ -326,11 +325,21 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             mConnService.write(send);
-            //mConnService.stop();
-            //mConnService.start();
             Log.d(TAG, "Sent Message: "+message);
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
         }
+    }
+
+    private void sendToBTPeers() {
+        if (bluetoothDevices.size()>0){
+            String peerAddress = (String) bluetoothDevices.get(0);
+            BluetoothSocket mmSocket = null;
+            BluetoothDevice device = bluetoothAdapter.getRemoteDevice(peerAddress);
+            Log.d(TAG, "Connecting to: "+peerAddress);
+            mConnService.connect(device);
+        }
+
+
     }
 }
