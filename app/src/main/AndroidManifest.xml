@@ -27,12 +27,6 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo" >
-        <activity
-            android:name="com.example.android.wifidirect.WiFiDirectActivity"
-            android:label="@string/app_name"
-            android:launchMode="singleTask"
-            android:windowSoftInputMode="stateHidden" >
-        </activity>
 
         <!-- Used for transferring files  after a successful connection -->
         <service
@@ -51,11 +45,13 @@
         <activity
             android:name="com.example.android.wifidirect.HybridMANETDTN"
             android:label="@string/title_activity_hybrid_manetdtn" >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
         <service

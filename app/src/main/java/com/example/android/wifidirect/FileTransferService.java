@@ -59,8 +59,8 @@ public class FileTransferService extends IntentService {
             Socket socket = new Socket();
             int port = intent.getExtras().getInt(EXTRAS_GROUP_OWNER_PORT);
 
-            Log.e(WiFiDirectActivity.TAG, "HOST IN FTS: "+host);
-            Log.e(WiFiDirectActivity.TAG, "PORT IN FTS: "+port);
+            Log.e(HybridMANETDTN.TAG, "HOST IN FTS: "+host);
+            Log.e(HybridMANETDTN.TAG, "PORT IN FTS: "+port);
 
             /*
 
@@ -103,15 +103,15 @@ public class FileTransferService extends IntentService {
             */
 
             try {
-                Log.d(WiFiDirectActivity.TAG, "Opening client socket - ");
+                Log.d(HybridMANETDTN.TAG, "Opening client socket - ");
                 socket.bind(null);
                 try {
                     socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
                 } catch(Exception e){
-                    Log.e(WiFiDirectActivity.TAG, "ERROR HEREEE");
+                    Log.e(HybridMANETDTN.TAG, "ERROR HEREEE");
                 }
 
-                Log.d(WiFiDirectActivity.TAG, "Client socket - " + socket.isConnected());
+                Log.d(HybridMANETDTN.TAG, "Client socket - " + socket.isConnected());
                 OutputStream stream = socket.getOutputStream();
 
 
@@ -121,9 +121,9 @@ public class FileTransferService extends IntentService {
                 output_writer.close();
                 //
                 //DeviceDetailFragment.copyFile(is, stream);
-                Log.d(WiFiDirectActivity.TAG, "Client: Data written");
+                Log.d(HybridMANETDTN.TAG, "Client: Data written");
             } catch (IOException e) {
-                Log.e(WiFiDirectActivity.TAG, e.getMessage());
+                Log.e(HybridMANETDTN.TAG, e.getMessage());
             } finally {
                 if (socket != null) {
                     if (socket.isConnected()) {
