@@ -107,8 +107,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void turnOnRadios(){
-        this.wifiManager.setWifiEnabled(true);
-
+        if (!this.wifiManager.isWifiEnabled()) {
+            this.wifiManager.setWifiEnabled(true);
+        }
         // add necessary intent values to be matched.
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -123,7 +124,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         receiver = new WiFiDirectBroadcastReceiver(this.manager, this.channel, this);
         registerReceiver(receiver, intentFilter);
-        this.bluetoothAdapter.enable();
+
+        if (!this.bluetoothAdapter.isEnabled()){
+            this.bluetoothAdapter.enable();
+
+        }
     }
 
     private void discoverWiFiPeers(){
