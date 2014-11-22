@@ -2,8 +2,8 @@
 <pre-dex-items>
 
     <item
-        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectDemo/app/build/intermediates/pre-dexed/debug/support-v4-18.0.0-aa1f1aa6245e7edff3bd3d40480e4f08a0f0af2f.jar"
-        jar="/Users/vincentsantos/Downloads/adt-bundle-mac-x86_64-20140702/sdk/extras/android/m2repository/com/android/support/support-v4/18.0.0/support-v4-18.0.0.jar"
+        dex="/Users/xtop/255/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/support-v4-18.0.0-f0c10af1f1731bfc820cd4c71755a1bfc2dce01a.jar"
+        jar="/Users/xtop/Downloads/adt-bundle-mac-x86_64-20140702/sdk/extras/android/m2repository/com/android/support/support-v4/18.0.0/support-v4-18.0.0.jar"
         jumboMode="false"
         revision="20.0.0"
         sha1="44ec51e9d395a47aab135e5e1b556c0007442156"/>
