@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Message;
 import android.content.Intent;
@@ -101,9 +102,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void turnOnGPS(){
-        Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
-        intent.putExtra("enabled", true);
-        this.sendBroadcast(intent);
+        if (!((LocationManager) this.getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
+            intent.putExtra("enabled", true);
+            this.sendBroadcast(intent);
+        }
     }
 
     private void turnOnRadios(){
