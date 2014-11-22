@@ -54,6 +54,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     public static final int BT_MESSAGE_WRITE = 3;
     public static final int BT_MESSAGE_TOAST = 4;
     public static final int BT_NEXT_PEER = 5;
+    //Intent
+    public static final int REQUEST_ENABLE_BT = 1;
+
     // Key names received from the BluetoothChatService Handler
     public static final String TOAST = "toast";
     // String buffer for outgoing messages
@@ -90,6 +93,14 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         //this.startService(i);
 
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                startBTConnService();
+        }
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -130,7 +141,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         if (!this.bluetoothAdapter.isEnabled()){
             this.bluetoothAdapter.enable();
-
         }
     }
 
@@ -141,8 +151,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         if (bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-            startActivity(discoverableIntent);
+            startActivityForResult(discoverableIntent,REQUEST_ENABLE_BT);
         }
+        else{
+            startBTConnService();
+        }
+
+    }
+
+    private void startBTConnService(){
         // Initialize the BluetoothChatService to perform bluetooth connections
         mConnService = new BluetoothConnService(this, mHandler);
 
@@ -161,7 +178,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         // END FORBLUETOOTH
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

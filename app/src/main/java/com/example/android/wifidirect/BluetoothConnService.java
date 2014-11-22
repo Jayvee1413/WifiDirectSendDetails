@@ -240,7 +240,6 @@ public class BluetoothConnService {
             try {
                 tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME,MY_UUID);
             } catch (IOException e) {
-                Log.d(TAG, "Socket Type: " + "listen() failed");
                 Log.e(TAG, "Socket Type: " + "listen() failed", e);
             }
             mmServerSocket = tmp;
