@@ -90,11 +90,15 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 
                 // we are connected with the other device, request connection
                 // info to find group owner IP
-
+                Log.d("BROADCASTER", "CONNECTED, GETTING INFO");
                 manager.requestConnectionInfo(channel, activity);
             } else {
                 // It's a disconnect
             }
         }
+    }
+
+    public void requestConnectionInfo(){
+        manager.requestConnectionInfo(channel, activity);
     }
 }
