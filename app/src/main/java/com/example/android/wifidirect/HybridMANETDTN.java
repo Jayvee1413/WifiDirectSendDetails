@@ -2,8 +2,12 @@ package com.example.android.wifidirect;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.WifiInfo;
@@ -38,6 +42,24 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private boolean isWifiP2pEnabled = false;
     public static final String TAG = "HYBRIDMANET";
 
+
+    // FOR BLUETOOTH
+    // Local Bluetooth adapter
+    private ArrayList bluetoothDevices;
+    // Message types sent from the BluetoothChatService Handler
+    public static final int BT_MESSAGE_STATE_CHANGE = 1;
+    public static final int BT_MESSAGE_READ = 2;
+    public static final int BT_MESSAGE_WRITE = 3;
+    public static final int BT_MESSAGE_TOAST = 4;
+    // Key names received from the BluetoothChatService Handler
+    public static final String TOAST = "toast";
+    // String buffer for outgoing messages
+    private StringBuffer mOutStringBuffer;
+    // Member object for the connection services
+    private BluetoothConnService mConnService = null;
+    // ENDFOR BLUETOOTH
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +77,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             public void onClick(View v) {
                 Log.d("TEST", "testing lang");
                 discoverWiFiPeers();
+                doBluetoothDiscovery();
             }
         });
 
@@ -109,7 +132,21 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
             startActivity(discoverableIntent);
-         }
+        }
+        // Initialize the BluetoothChatService to perform bluetooth connections
+        mConnService = new BluetoothConnService(this, mHandler);
+
+        // FOR BLUETOOTH
+        if (mConnService != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mConnService.getState() == BluetoothConnService.STATE_NONE) {
+                // Start the Bluetooth chat services
+                mConnService.start();
+            }
+        }
+        // Initialize the buffer for outgoing messages
+        mOutStringBuffer = new StringBuffer("");
+        // END FORBLUETOOTH
     }
 
 
@@ -177,5 +214,123 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
 
+    }
+
+    public void doBluetoothDiscovery() {
+        bluetoothDevices = new ArrayList();
+
+        // If we're already discovering, stop it
+        if (bluetoothAdapter.isDiscovering()) {
+            bluetoothAdapter.cancelDiscovery();
+        }
+
+        // Request discover from BluetoothAdapter
+        bluetoothAdapter.startDiscovery();
+
+        // Register for broadcasts when a device is discovered
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        this.registerReceiver(mReceiver, filter);
+
+        // Register for broadcasts when discovery has finished
+        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        this.registerReceiver(mReceiver, filter);
+    }
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            // When discovery finds a device
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a ListView
+                Log.d(HybridMANETDTN.TAG, "Discovered " + device.getName() + " " + device.getAddress());
+                bluetoothDevices.add(device.getAddress());
+            }
+            // When discovery is finished
+            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                Log.d(HybridMANETDTN.TAG, "Finished bluetooth discovery");
+                if (bluetoothDevices.size() == 0) {
+                    Toast.makeText(HybridMANETDTN.this, "No devices found via bluetooth", Toast.LENGTH_LONG).show();
+                    Log.d(HybridMANETDTN.TAG, "No BT devices found");
+                } else {
+                    java.util.HashSet hs = new java.util.HashSet();
+                    hs.addAll(bluetoothDevices);
+                    bluetoothDevices.clear();
+                    bluetoothDevices.addAll(hs);
+                    java.util.Iterator iterator = (java.util.Iterator) bluetoothDevices.iterator();
+                    BluetoothSocket mmSocket = null;
+                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice("28:CC:01:20:52:5B");
+                    mConnService.connect(device);
+
+                }
+            }
+        }
+    };
+
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case BT_MESSAGE_STATE_CHANGE:
+                    Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+                    switch (msg.arg1) {
+                        case BluetoothConnService.STATE_CONNECTED:
+                            Log.d(TAG,"Connected!!!! Sending...");
+
+                            if (!BluetoothAdapter.getDefaultAdapter().getAddress().equals("28:CC:01:20:52:5B"))
+                            {
+                                Log.d(TAG,"Connected!!!! Sending...");
+                                sendBTMessage("TEST");
+                            }
+
+                            //mConversationArrayAdapter.clear();
+                            break;
+                        case BluetoothConnService.STATE_CONNECTING:
+                            //setStatus(R.string.title_connecting);
+                            break;
+                        case BluetoothConnService.STATE_LISTEN:
+                        case BluetoothConnService.STATE_NONE:
+                            //setStatus(R.string.title_not_connected);
+                            break;
+                    }
+                    break;
+                case BT_MESSAGE_WRITE:
+                    byte[] writeBuf = (byte[]) msg.obj;
+                    // construct a string from the buffer
+                    String writeMessage = new String(writeBuf);
+                    //mConversationArrayAdapter.add("Me:  " + writeMessage);
+                    break;
+                case BT_MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    // construct a string from the valid bytes in the buffer
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+                    break;
+                case BT_MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                            Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
+    private void sendBTMessage(String message) {
+        // Check that we're actually connected before trying anything
+        if (mConnService.getState() != BluetoothConnService.STATE_CONNECTED) {
+            return;
+        }
+
+        // Check that there's actually something to send
+        if (message.length() > 0) {
+            // Get the message bytes and tell the BluetoothChatService to write
+            byte[] send = message.getBytes();
+            mConnService.write(send);
+            //mConnService.stop();
+            //mConnService.start();
+            Log.d(TAG, "Sent Message: "+message);
+            // Reset out string buffer to zero and clear the edit text field
+            mOutStringBuffer.setLength(0);
+        }
     }
 }
