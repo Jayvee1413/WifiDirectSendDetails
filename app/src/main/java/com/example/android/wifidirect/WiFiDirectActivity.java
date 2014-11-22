@@ -21,6 +21,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -34,6 +36,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.wifidirect.DeviceListFragment.DeviceActionListener;
@@ -55,6 +58,14 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
     private final IntentFilter intentFilter = new IntentFilter();
     private Channel channel;
     private BroadcastReceiver receiver = null;
+
+    private Location currentLocation;
+    private LocationManager locationManager;
+    private String locationProvider;
+    double currentLat;
+    double currentLong;
+
+    GPSTracker gps;
 
     /**
      * @param isWifiP2pEnabled the isWifiP2pEnabled to set
@@ -78,7 +89,6 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
 
-
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -87,6 +97,7 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         super.onResume();
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver, intentFilter);
+
     }
 
     @Override
@@ -264,4 +275,6 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         }
 
     }
+
+
 }

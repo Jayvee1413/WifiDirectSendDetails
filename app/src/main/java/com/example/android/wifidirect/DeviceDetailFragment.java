@@ -108,6 +108,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             }
         });
 
+        mContentView.findViewById(R.id.btn_show_data).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showData(v);
+            }
+        });
         mContentView.findViewById(R.id.btn_send_data);
 
         mContentView.findViewById(R.id.btn_disconnect).setOnClickListener(
@@ -133,6 +139,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 });
 
         return mContentView;
+    }
+
+    public void showData(View view){
+        Intent intent = new Intent(this.getActivity(), GetData.class);
+        startActivity(intent);
     }
 
     @Override
@@ -203,11 +214,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             String age = mAge.getText().toString();
                             String message = mMessage.getText().toString();
                             JSONObject data_object = new JSONObject();
+                            GPSTracker gps = new GPSTracker(getActivity());
+                            Double latitude = gps.getLatitude();
+                            Double longitude = gps.getLongitude();
                             try {
                                 data_object.put("name", name);
                                 data_object.put("address", address);
                                 data_object.put("age", age);
                                 data_object.put("message", message);
+                                data_object.put("latitude", latitude);
+                                data_object.put("longitude", longitude);
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -359,14 +375,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     String age = json_data.getString("age");
                     String address = json_data.getString("address");
                     String message = json_data.getString("message");
+                    Double latitude = json_data.getDouble("latitude");
+                    Double longitude = json_data.getDouble("longitude");
                     Log.i(WiFiDirectActivity.TAG, "NAME: " + name);
                     Log.i(WiFiDirectActivity.TAG, "AGE: " + age);
                     Log.i(WiFiDirectActivity.TAG, "ADDRESS: " + address);
                     Log.i(WiFiDirectActivity.TAG, "MESSAGE: " + message);
+                    Log.i(WiFiDirectActivity.TAG, "LATITUDE: " + latitude);
+                    Log.i(WiFiDirectActivity.TAG, "LONGITUDE: " + longitude);
+
 
 
                     DataDAO data_dao = new DataDAO(context);
-                    Data data = new Data(name, age, address, message);
+                    Data data = new Data(name, age, address, message, latitude, longitude);
                     data_dao.addData(data);
 
                 } catch (JSONException e) {
