@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.net.wifi.WpsInfo;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Message;
 import android.content.Intent;
@@ -35,6 +36,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,6 +73,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     public static final int BT_MESSAGE_READ = 2;
     public static final int BT_MESSAGE_WRITE = 3;
     public static final int BT_MESSAGE_TOAST = 4;
+    public static final int BT_NEXT_PEER = 5;
+    //Intent
+    public static final int REQUEST_ENABLE_BT = 1;
+
     // Key names received from the BluetoothChatService Handler
     public static final String TOAST = "toast";
     // String buffer for outgoing messages
@@ -136,6 +142,14 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     }
 
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                startBTConnService();
+        }
+    }
+
     /** register the BroadcastReceiver with the intent values to be matched */
     @Override
     public void onResume() {
@@ -161,18 +175,21 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void turnOnGPS(){
-        Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
-        intent.putExtra("enabled", true);
-        this.sendBroadcast(intent);
-        this.gpsTracker = new GPSTracker(this);
-        if(this.gpsTracker.canGetLocation()){
-            this.gpsTracker.getLocation();
+        if (!((LocationManager) this.getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
+            intent.putExtra("enabled", true);
+            this.sendBroadcast(intent);
+            this.gpsTracker = new GPSTracker(this);
+            if(this.gpsTracker.canGetLocation()){
+                this.gpsTracker.getLocation();
+            }
         }
     }
 
     private void turnOnRadios(){
-        this.wifiManager.setWifiEnabled(true);
-
+        if (!this.wifiManager.isWifiEnabled()) {
+            this.wifiManager.setWifiEnabled(true);
+        }
         // add necessary intent values to be matched.
 
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -187,7 +204,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         receiver = new WiFiDirectBroadcastReceiver(this.manager, this.channel, this);
         registerReceiver(receiver, intentFilter);
-        this.bluetoothAdapter.enable();
+
+        if (!this.bluetoothAdapter.isEnabled()){
+            this.bluetoothAdapter.enable();
+        }
     }
 
     private void discoverWiFiPeers(){
@@ -210,8 +230,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         if (bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-            startActivity(discoverableIntent);
+            startActivityForResult(discoverableIntent,REQUEST_ENABLE_BT);
         }
+        else{
+            startBTConnService();
+        }
+
+    }
+
+    private void startBTConnService(){
         // Initialize the BluetoothChatService to perform bluetooth connections
         mConnService = new BluetoothConnService(this, mHandler);
 
@@ -225,6 +252,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
+
+        bluetoothDevices = new ArrayList();
+
         // END FORBLUETOOTH
     }
 
@@ -279,9 +309,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             }
 
         }
-
     }
-
 
     @Override
     public void showDetails(WifiP2pDevice device) {
@@ -350,8 +378,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     public void doBluetoothDiscovery() {
-        bluetoothDevices = new ArrayList();
-
         // If we're already discovering, stop it
         if (bluetoothAdapter.isDiscovering()) {
             bluetoothAdapter.cancelDiscovery();
@@ -378,7 +404,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
                 Log.d(HybridMANETDTN.TAG, "Discovered " + device.getName() + " " + device.getAddress());
-                bluetoothDevices.add(device.getAddress());
+                if (!bluetoothDevices.contains(device.getAddress())){
+                    bluetoothDevices.add(device.getAddress());
+                }
             }
             // When discovery is finished
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
@@ -387,15 +415,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     Toast.makeText(HybridMANETDTN.this, "No devices found via bluetooth", Toast.LENGTH_LONG).show();
                     Log.d(HybridMANETDTN.TAG, "No BT devices found");
                 } else {
-                    java.util.HashSet hs = new java.util.HashSet();
-                    hs.addAll(bluetoothDevices);
-                    bluetoothDevices.clear();
-                    bluetoothDevices.addAll(hs);
-                    java.util.Iterator iterator = (java.util.Iterator) bluetoothDevices.iterator();
-                    BluetoothSocket mmSocket = null;
-                    BluetoothDevice device = bluetoothAdapter.getRemoteDevice("28:CC:01:20:52:5B");
-                    mConnService.connect(device);
-
+                    sendToBTPeers();
                 }
             }
         }
@@ -411,11 +431,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                         case BluetoothConnService.STATE_CONNECTED:
                             Log.d(TAG,"Connected!!!! Sending...");
 
-                            if (!BluetoothAdapter.getDefaultAdapter().getAddress().equals("28:CC:01:20:52:5B"))
-                            {
-                                Log.d(TAG,"Connected!!!! Sending...");
-                                sendBTMessage("TEST");
-                            }
+                            sendBTMessage("TEST");
 
                             //mConversationArrayAdapter.clear();
                             break;
@@ -435,14 +451,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     //mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case BT_MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
+                    //byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    //String readMessage = new String(readBuf, 0, msg.arg1);
                     //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                     break;
                 case BT_MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                             Toast.LENGTH_SHORT).show();
+                case BT_NEXT_PEER:
+                    if(bluetoothDevices.size() > 0) {
+                        bluetoothDevices.remove(0);
+                    }
+                    sendToBTPeers();
                     break;
             }
         }
@@ -465,6 +486,18 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
         }
+    }
+
+    private void sendToBTPeers() {
+        if (bluetoothDevices.size()>0){
+            String peerAddress = (String) bluetoothDevices.get(0);
+            BluetoothSocket mmSocket = null;
+            BluetoothDevice device = bluetoothAdapter.getRemoteDevice(peerAddress);
+            Log.d(TAG, "Connecting to: "+peerAddress);
+            mConnService.connect(device);
+        }
+
+
     }
 
     private void sendWifiMessage(String message){
