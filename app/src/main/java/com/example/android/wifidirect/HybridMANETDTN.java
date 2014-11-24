@@ -77,6 +77,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private static final int SOCKET_TIMEOUT = 5000;
     private GPSTracker gpsTracker;
     private String data_message;
+    private boolean isBTSender = false;
 
     public int getPeer_counter() {
         return peer_counter;
@@ -142,8 +143,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 isSender = true;
                 data_message = getDataOut();
                 Log.d(TAG, "MESSAGE: " + data_message);
-                discoverWiFiPeers();
-                //doBluetoothDiscovery();
+                //discoverWiFiPeers();
+                doBluetoothDiscovery();
             }
         });
 
@@ -481,15 +482,16 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     switch (msg.arg1) {
                         case BluetoothConnService.STATE_CONNECTED:
                             Log.d(TAG,"Connected!!!! Sending...");
-
-                            sendBTMessage("TEST");
-
+                            if (isBTSender){
+                                sendBTMessage(data_message);
+                            }
                             //mConversationArrayAdapter.clear();
                             break;
                         case BluetoothConnService.STATE_CONNECTING:
                             //setStatus(R.string.title_connecting);
                             break;
                         case BluetoothConnService.STATE_LISTEN:
+                            isBTSender = false;
                         case BluetoothConnService.STATE_NONE:
                             //setStatus(R.string.title_not_connected);
                             break;
@@ -502,10 +504,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     //mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case BT_MESSAGE_READ:
-                    //byte[] readBuf = (byte[]) msg.obj;
+                    byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     //String readMessage = new String(readBuf, 0, msg.arg1);
                     //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+                    String readMessage = new String(readBuf,0,msg.arg1);
+                    Log.d(HybridMANETDTN.TAG,"Saving Message to DB "+readMessage);
+                    if(!readMessage.equals("ACK")){
+                        saveDataDAO(readMessage);
+                    }
                     break;
                 case BT_MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
@@ -521,6 +528,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     };
 
     private void sendBTMessage(String message) {
+        Log.d(TAG, "ENTER "+Integer.toString(message.length()));
         // Check that we're actually connected before trying anything
         if (mConnService.getState() != BluetoothConnService.STATE_CONNECTED) {
             return;
@@ -531,8 +539,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             mConnService.write(send);
-            //mConnService.stop();
-            //mConnService.start();
             Log.d(TAG, "Sent Message: "+message);
             // Reset out string buffer to zero and clear the edit text field
             mOutStringBuffer.setLength(0);
@@ -540,14 +546,41 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void sendToBTPeers() {
+        isBTSender = true;
         if (bluetoothDevices.size()>0){
             String peerAddress = (String) bluetoothDevices.get(0);
-            BluetoothSocket mmSocket = null;
             BluetoothDevice device = bluetoothAdapter.getRemoteDevice(peerAddress);
             Log.d(TAG, "Connecting to: "+peerAddress);
             mConnService.connect(device);
         }
 
+
+    }
+
+    private void saveDataDAO(String result){
+        JSONObject json_data = null;
+        try {
+            json_data = new JSONObject(result);
+            String name = json_data.getString("name");
+            String age = json_data.getString("age");
+            String address = json_data.getString("address");
+            String message = json_data.getString("message");
+            Double latitude = json_data.getDouble("latitude");
+            Double longitude = json_data.getDouble("longitude");
+            Log.i(HybridMANETDTN.TAG, "NAME: " + name);
+            Log.i(HybridMANETDTN.TAG, "AGE: " + age);
+            Log.i(HybridMANETDTN.TAG, "ADDRESS: " + address);
+            Log.i(HybridMANETDTN.TAG, "MESSAGE: " + message);
+            Log.i(HybridMANETDTN.TAG, "LAT: " + latitude.toString());
+            Log.i(HybridMANETDTN.TAG, "LONG: " + longitude.toString());
+
+            DataDAO data_dao = new DataDAO(getApplicationContext());
+            Data data = new Data(name, age, address, message, latitude, longitude);
+            data_dao.addData(data);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
     }
 

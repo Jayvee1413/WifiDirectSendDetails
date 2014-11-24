@@ -51,8 +51,8 @@ public class DataDAO extends SQLiteOpenHelper {
                 "address VARCHAR(100), " +
                 "message VARCHAR(200)," +
                 "latitude VARCHAR(20)," +
-                "longitude VARCHAR(20) " +
-                "status ENUM('SENT', 'QUEUED') DEFAULT 'QUEUED')";
+                "longitude VARCHAR(20)," +
+                "status VARCHAR(10) DEFAULT 'QUEUED')";
 
         //create data table
         db.execSQL(CREATE_DATA_TABLE);

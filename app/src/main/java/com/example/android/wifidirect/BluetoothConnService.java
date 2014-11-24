@@ -416,6 +416,8 @@ public class BluetoothConnService {
                     else{
                         byte[] send = new String("ACK").getBytes();
                         this.write(send);
+
+
                     }
 
                     // Send the obtained bytes to the UI Activity
