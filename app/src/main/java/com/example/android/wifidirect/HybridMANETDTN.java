@@ -39,6 +39,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListListener, DeviceActionListener, WifiP2pManager.ConnectionInfoListener{
@@ -460,6 +461,18 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             bluetoothAdapter.cancelDiscovery();
         }
 
+        // Add paired devices to the device list
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        // If there are paired devices
+        if (pairedDevices.size() > 0) {
+            // Loop through paired devices
+            for (BluetoothDevice device : pairedDevices) {
+                // Add the name and address to an array adapter to show in a ListView
+                Log.d(HybridMANETDTN.TAG,"Adding paired device " +device.getName() + " " + device.getAddress());
+                bluetoothDevices.add(device.getAddress());
+            }
+        }
+
         // Request discover from BluetoothAdapter
         bluetoothAdapter.startDiscovery();
 
@@ -492,7 +505,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     Toast.makeText(HybridMANETDTN.this, "No devices found via bluetooth", Toast.LENGTH_LONG).show();
                     Log.d(HybridMANETDTN.TAG, "No BT devices found");
                 } else {
-                    sendToBTPeers();
+                    if(!isBTSender){
+                        sendToBTPeers();
+                    }
                 }
             }
         }
@@ -507,12 +522,14 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     switch (msg.arg1) {
                         case BluetoothConnService.STATE_CONNECTED:
                             Log.d(TAG,"Connected!!!! Sending...");
+                            Log.d(TAG,"isBTSender " + (isBTSender ? "YES" : "NO"));
                             if (isBTSender){
                                 sendBTMessage(data_message);
                             }
                             //mConversationArrayAdapter.clear();
                             break;
                         case BluetoothConnService.STATE_CONNECTING:
+                            isBTSender = true;
                             //setStatus(R.string.title_connecting);
                             break;
                         case BluetoothConnService.STATE_LISTEN:
@@ -535,7 +552,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                     String readMessage = new String(readBuf,0,msg.arg1);
                     Log.d(HybridMANETDTN.TAG,"Saving Message to DB "+readMessage);
-                    if(!readMessage.equals("ACK")){
+                    if(readMessage.length() > 0 && !readMessage.equals("ACK")){
                         saveDataDAO(readMessage);
                     }
                     break;

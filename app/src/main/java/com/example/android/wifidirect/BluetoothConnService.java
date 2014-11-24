@@ -397,7 +397,7 @@ public class BluetoothConnService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[10000000];
+            byte[] buffer = new byte[1024];
             int bytes;
 
             // Keep listening to the InputStream while connected
@@ -408,16 +408,15 @@ public class BluetoothConnService {
                     String receivedMessage = new String(buffer,0,bytes);
 
                     Log.d(TAG, "Received message" + new String(buffer,0,bytes));
+                    Log.d(TAG, "Received message length" + Integer.toString(receivedMessage.length()));
 
                     if (receivedMessage.equals("ACK")){
                         Log.d(TAG, "STOPPING coz " + receivedMessage);
                         this.cancel();
                     }
-                    else{
+                    else if (receivedMessage.length()>0){
                         byte[] send = new String("ACK").getBytes();
                         this.write(send);
-
-
                     }
 
                     // Send the obtained bytes to the UI Activity
