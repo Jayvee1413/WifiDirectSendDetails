@@ -3,23 +3,21 @@ package com.example.android.wifidirect;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.net.wifi.WpsInfo;
-import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
 import android.view.Menu;
@@ -32,11 +30,6 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -66,10 +59,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private boolean isSender = false;
-
-    public boolean isWifiConnectFlag() {
-        return wifiConnectFlag;
-    }
+    public ArrayList<String> data_message_list;
 
     public void setWifiConnectFlag(boolean wifiConnectFlag) {
         this.wifiConnectFlag = wifiConnectFlag;
@@ -122,9 +112,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         public void handleMessage(Message message){
             Log.d(TAG, "GOT MESSAGE FROM SERVICE");
             setPeer_counter(getPeer_counter() - 1);
+            disconnect();
             if(getPeer_counter() < 1){
                 setWifiConnectFlag(false);
                 setSender(false);
+
             }
         }
     };
@@ -140,15 +132,34 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         this.discoverWiFiPeers();
         setContentView(R.layout.activity_hybrid_manetdtn);
         Intent i = new Intent(this, SendSavedData.class);
+        data_message_list = new ArrayList<String>();
 
-        this.findViewById(R.id.btn_send_data).setOnClickListener(new View.OnClickListener() {
+                this.findViewById(R.id.btn_send_data).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isSender = true;
                 data_message = getDataOut();
+
+                data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
-                //discoverWiFiPeers();
-                doBluetoothDiscovery();
+                discoverWiFiPeers();
+                //doBluetoothDiscovery();
+            }
+        });
+
+        this.findViewById(R.id.btn_send_saved_data).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isSender = true;
+                DataDAO dataDAO = new DataDAO(getApplicationContext());
+                List<Data> data_list = dataDAO.getAllData();
+                for(Data data: data_list){
+                    data_message = data.getData().toString();
+                    data_message_list.add(data_message);
+                }
+                Log.d(TAG, "MESSAGE: " + data_message);
+                discoverWiFiPeers();
+                //doBluetoothDiscovery();
             }
         });
 
@@ -157,7 +168,6 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
 
     private String getDataOut(){
-        TextView statusText = (TextView) this.findViewById(R.id.status_text);
         EditText mName = (EditText) this.findViewById(R.id.nameField);
         EditText mAddress = (EditText) this.findViewById(R.id.addressField);
         EditText mAge = (EditText) this.findViewById(R.id.ageField);
@@ -237,6 +247,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         super.onPause();
         unregisterReceiver(receiver);
         unregisterReceiver(mReceiver);
+        unregisterReceiver(mySendWifiDataServiceReceiver);
         Intent intent = new Intent(this, StartReceiverService.class);
         this.stopService(intent);
     }
@@ -408,7 +419,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 Log.d(HybridMANETDTN.TAG, "Failed to Connect");
                 wifiConnectFlag = false;
                 peer_counter--;
-                if(peer_counter == 0){
+                if (peer_counter == 0) {
                     isSender = false;
                 }
             }
@@ -450,7 +461,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
 
         if(this.wifiConnectFlag && this.isSender && this.info != null){
-            sendWifiMessage(data_message);
+
+            sendWifiMessage(data_message, data_message_list);
         }
 
     }
@@ -626,7 +638,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     }
 
-    private void sendWifiMessage(String message){
+    private void sendWifiMessage(String message, ArrayList<String> message_list){
         Log.d(this.TAG, "INSIDE SEND WIFI MESSAGE");
         Log.d(this.TAG, "WIFICONNECTFLAG: " + (wifiConnectFlag ? "TRUE" : "FALSE"));
         Log.d(this.TAG, "IS SENDER: " + (isSender ? "TRUE" : "FALSE"));
@@ -636,6 +648,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             Intent intent = new Intent(this, SendWifiDataService.class);
             intent.putExtra(SendWifiDataService.EXTRAS_ADDRESS, host);
             intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE, message);
+            intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE_LIST, message_list);
             intent.putExtra("MESSENGER", new Messenger(sendDataServiceHandler));
             intent.putExtra("send_data", true);
             Log.d(this.TAG, "STARTING SERVICE TO SEND MESSAGE");
@@ -649,6 +662,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(HybridMANETDTN.TAG, "DISCONNECTING");
             disconnect();
         }
 

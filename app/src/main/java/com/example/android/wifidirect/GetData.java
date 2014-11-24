@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -15,12 +16,17 @@ public class GetData extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_data);
+
         DataDAO dataDAO = new DataDAO(this);
         ArrayList<Data> dataArrayList;
         dataArrayList = (ArrayList<Data>) dataDAO.getAllData();
+        int data_size = dataArrayList.size();
+        TextView dataCountField = (TextView)findViewById(R.id.dataCountField);
+        dataCountField.setText(Integer.toString(data_size));
         for(Data data : dataArrayList){
             Log.v("DATA", data.toString());
         }
+
     }
 
 

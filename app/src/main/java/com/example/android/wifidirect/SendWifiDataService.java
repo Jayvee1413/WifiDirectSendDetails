@@ -3,7 +3,6 @@ package com.example.android.wifidirect;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -13,8 +12,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Created by vincentsantos on 11/22/14.
@@ -23,6 +22,7 @@ public class SendWifiDataService extends IntentService {
     private static final int SOCKET_TIMEOUT = 5000;
     public static final String EXTRAS_ADDRESS = "go_host";
     public static final String EXTRAS_MESSAGE = "message";
+    public static final String EXTRAS_MESSAGE_LIST = "message_list";
     public static final int EXTRAS_RUN_SERVER = 1;
     public static final int EXTRAS_CANCEL_SERVER = 0;
     public static final int RECEIVER_PORT = 8003;
@@ -40,6 +40,7 @@ public class SendWifiDataService extends IntentService {
         String host = intent.getExtras().getString(EXTRAS_ADDRESS);
         String message = intent.getExtras().getString(EXTRAS_MESSAGE);
         Messenger messenger = (Messenger)intent.getExtras().get("MESSENGER");
+        ArrayList<String> message_list = (ArrayList<String>)intent.getExtras().get(EXTRAS_MESSAGE_LIST);
         Boolean send_data = intent.getExtras().getBoolean("send_data");
         int port = this.RECEIVER_PORT;
         Socket socket = new Socket();
@@ -54,8 +55,10 @@ public class SendWifiDataService extends IntentService {
                 if (socket != null) {
                     OutputStream stream = socket.getOutputStream();
                     OutputStreamWriter output_writer = new OutputStreamWriter(stream);
-                    Log.d(HybridMANETDTN.TAG, "SENDING MESSAGE: " + message);
-                    output_writer.write(message);
+                    for(String message_data: message_list) {
+                        Log.d(HybridMANETDTN.TAG, "SENDING MESSAGE: " + message_data);
+                        output_writer.write(message_data);
+                    }
                     output_writer.close();
 
                 }

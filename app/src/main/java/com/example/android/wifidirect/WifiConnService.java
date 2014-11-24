@@ -1,7 +1,6 @@
 package com.example.android.wifidirect;
 
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
 
 import java.util.ArrayList;
 

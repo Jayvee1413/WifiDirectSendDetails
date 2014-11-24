@@ -22,6 +22,7 @@
     <string name="age">Age</string>
     <string name="message">Message</string>
     <string name="send_data_to_server_button">Send</string>
+    <string name="send_saved_data_to_server_button">Send Saved Data</string>
     <string name="title_activity_get_data">GetData</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>

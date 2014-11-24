@@ -30,37 +30,40 @@ public final class R {
         public static final int section_header=0x7f020006;
     }
     public static final class id {
-        public static final int action_settings=0x7f08001e;
-        public static final int addressField=0x7f080003;
-        public static final int addressLabel=0x7f080002;
-        public static final int ageField=0x7f080005;
-        public static final int ageLabel=0x7f080004;
-        public static final int atn_direct_discover=0x7f08001d;
-        public static final int atn_direct_enable=0x7f08001c;
-        public static final int btn_connect=0x7f08000a;
-        public static final int btn_disconnect=0x7f08000b;
-        public static final int btn_send_data=0x7f080008;
-        public static final int btn_show_data=0x7f080009;
-        public static final int btn_start_client=0x7f08000c;
-        public static final int details_layout=0x7f08000d;
-        public static final int device_address=0x7f08000e;
-        public static final int device_details=0x7f08001b;
-        public static final int device_info=0x7f08000f;
-        public static final int device_name=0x7f08001a;
-        public static final int frag_detail=0x7f080019;
-        public static final int frag_list=0x7f080018;
-        public static final int group_ip=0x7f080011;
-        public static final int group_owner=0x7f080010;
-        public static final int icon=0x7f080014;
-        public static final int linearLayout1=0x7f080017;
-        public static final int messageField=0x7f080007;
-        public static final int messageLabel=0x7f080006;
-        public static final int my_name=0x7f080015;
-        public static final int my_status=0x7f080016;
-        public static final int nameField=0x7f080001;
-        public static final int nameLabel=0x7f080000;
-        public static final int status_bar=0x7f080012;
-        public static final int status_text=0x7f080013;
+        public static final int action_settings=0x7f080021;
+        public static final int addressField=0x7f080005;
+        public static final int addressLabel=0x7f080004;
+        public static final int ageField=0x7f080007;
+        public static final int ageLabel=0x7f080006;
+        public static final int atn_direct_discover=0x7f080020;
+        public static final int atn_direct_enable=0x7f08001f;
+        public static final int btn_connect=0x7f08000d;
+        public static final int btn_disconnect=0x7f08000e;
+        public static final int btn_send_data=0x7f08000a;
+        public static final int btn_send_saved_data=0x7f08000b;
+        public static final int btn_show_data=0x7f08000c;
+        public static final int btn_start_client=0x7f08000f;
+        public static final int dataCountField=0x7f080001;
+        public static final int dataCountLabel=0x7f080000;
+        public static final int details_layout=0x7f080010;
+        public static final int device_address=0x7f080011;
+        public static final int device_details=0x7f08001e;
+        public static final int device_info=0x7f080012;
+        public static final int device_name=0x7f08001d;
+        public static final int frag_detail=0x7f08001c;
+        public static final int frag_list=0x7f08001b;
+        public static final int group_ip=0x7f080014;
+        public static final int group_owner=0x7f080013;
+        public static final int icon=0x7f080017;
+        public static final int linearLayout1=0x7f08001a;
+        public static final int messageField=0x7f080009;
+        public static final int messageLabel=0x7f080008;
+        public static final int my_name=0x7f080018;
+        public static final int my_status=0x7f080019;
+        public static final int nameField=0x7f080003;
+        public static final int nameLabel=0x7f080002;
+        public static final int status_bar=0x7f080015;
+        public static final int status_text=0x7f080016;
     }
     public static final class layout {
         public static final int activity_get_data=0x7f030000;
@@ -97,9 +100,10 @@ public final class R {
         public static final int no=0x7f060012;
         public static final int p2p_off_warning=0x7f060013;
         public static final int send_data_to_server_button=0x7f060014;
-        public static final int show_data_button=0x7f060015;
-        public static final int title_activity_get_data=0x7f060016;
-        public static final int title_activity_hybrid_manetdtn=0x7f060017;
-        public static final int yes=0x7f060018;
+        public static final int send_saved_data_to_server_button=0x7f060015;
+        public static final int show_data_button=0x7f060016;
+        public static final int title_activity_get_data=0x7f060017;
+        public static final int title_activity_hybrid_manetdtn=0x7f060018;
+        public static final int yes=0x7f060019;
     }
 }

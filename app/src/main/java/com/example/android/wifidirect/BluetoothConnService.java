@@ -1,15 +1,5 @@
 package com.example.android.wifidirect;
 
-import java.lang.String;import java.lang.Thread;import java.util.UUID;
-
-/**
- * Created by xtop on 11/17/14.
- */
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -19,7 +9,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import com.example.android.wifidirect.HybridMANETDTN;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
+
+/**
+ * Created by xtop on 11/17/14.
+ */
 
 /**
  * This class does all the work for setting up and managing Bluetooth

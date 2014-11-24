@@ -55,4 +55,11 @@
             android:layout_height="wrap_content"
             android:text="@string/send_data_to_server_button"
             android:layout_below="@id/messageField"/>
+
+        <Button
+            android:id="@+id/btn_send_saved_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/send_saved_data_to_server_button"
+            android:layout_below="@id/btn_send_data"/>
 </RelativeLayout>
