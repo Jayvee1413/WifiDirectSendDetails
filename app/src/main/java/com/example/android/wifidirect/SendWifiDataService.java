@@ -25,8 +25,7 @@ public class SendWifiDataService extends IntentService {
     public static final String EXTRAS_MESSAGE = "message";
     public static final int EXTRAS_RUN_SERVER = 1;
     public static final int EXTRAS_CANCEL_SERVER = 0;
-    public static final int  PORT = 8003;
-    private WifiAcceptThread wifiAcceptThread;
+    public static final int RECEIVER_PORT = 8003;
 
     public SendWifiDataService(String name) {
         super(name);
@@ -34,7 +33,6 @@ public class SendWifiDataService extends IntentService {
     public SendWifiDataService() {
         super("SendDataService");
     }
-
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(HybridMANETDTN.TAG, "INSIDE SEND DATA SERVCIE");
@@ -43,8 +41,9 @@ public class SendWifiDataService extends IntentService {
         String message = intent.getExtras().getString(EXTRAS_MESSAGE);
         Messenger messenger = (Messenger)intent.getExtras().get("MESSENGER");
         Boolean send_data = intent.getExtras().getBoolean("send_data");
-        int port = this.PORT;
+        int port = this.RECEIVER_PORT;
         Socket socket = new Socket();
+        Log.d(HybridMANETDTN.TAG, "SEND_DATA: " + (send_data ? "TRUE" : "FALSE"));
         if(send_data) {
 
 
@@ -68,7 +67,7 @@ public class SendWifiDataService extends IntentService {
                     if (socket.isConnected()) {
                         try {
                             socket.close();
-                            ((HybridMANETDTN) context).disconnect();
+
                         } catch (IOException e) {
                             // Give up
                             e.printStackTrace();
@@ -81,62 +80,17 @@ public class SendWifiDataService extends IntentService {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
+                Intent broadcastIntent = new Intent();
+                broadcastIntent.setAction(HybridMANETDTN.MySendWifiDataServiceReceiver.PROCESS_RESPONSE);
+                broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                sendBroadcast(broadcastIntent);
             }
 
-        } else {
-
-            switch(intent.getExtras().getInt("server_mode")){
-
-                case EXTRAS_CANCEL_SERVER:
-                    wifiAcceptThread.cancel();
-                    wifiAcceptThread = null;
-                    break;
-                case EXTRAS_RUN_SERVER:
-                    wifiAcceptThread = new WifiAcceptThread();
-                    wifiAcceptThread.run();
-                    break;
-
-            }
         }
 
     }
 
-    private class WifiAcceptThread extends Thread{
 
-        private ServerSocket serverSocket;
-        private String host;
-        private int port = 8003;
-
-        public WifiAcceptThread(){
-            super();
-        }
-
-        public void run(){
-            if(serverSocket == null || (serverSocket!= null && serverSocket.isClosed())){
-                try {
-                    serverSocket = new ServerSocket(this.port);
-                    serverSocket.accept();
-                    Log.d(HybridMANETDTN.TAG, "GOT MESSAGE");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public void cancel() {
-            if(serverSocket != null && !serverSocket.isClosed()){
-                try {
-                    serverSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        }
-
-
-
-    }
 
 
 

@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.net.wifi.WpsInfo;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.content.Intent;
@@ -49,6 +50,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private WifiP2pManager.Channel channel;
     private final IntentFilter intentFilter = new IntentFilter();
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    private StartReceiverService serverReceiverTask;
+    private MySendWifiDataServiceReceiver mySendWifiDataServiceReceiver;
 
     private boolean isWifiP2pEnabled = false;
     public static final String TAG = "HYBRIDMANET";
@@ -162,8 +165,20 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         String address = mAddress.getText().toString();
         String age = mAge.getText().toString();
         String message = mMessage.getText().toString();
-        Double latitude = this.gpsTracker.getLatitude();
-        Double longitude = this.gpsTracker.getLongitude();
+
+        Double latitude;
+        try {
+            latitude = this.gpsTracker.getLatitude();
+        } catch(Exception e){
+            latitude = 0.0;
+        }
+        Double longitude;
+
+        try {
+            longitude = this.gpsTracker.getLongitude();
+        } catch(Exception e){
+            longitude = 0.0;
+        }
         JSONObject data_object = new JSONObject();
         try {
             data_object.put("name", name);
@@ -204,6 +219,16 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         this.registerReceiver(mReceiver, filter);
 
+
+        IntentFilter mySendWifiDataServiceReceiverfilter = new IntentFilter(mySendWifiDataServiceReceiver.PROCESS_RESPONSE);
+        filter.addCategory(Intent.CATEGORY_DEFAULT);
+        mySendWifiDataServiceReceiver = new MySendWifiDataServiceReceiver();
+        registerReceiver(mySendWifiDataServiceReceiver, mySendWifiDataServiceReceiverfilter);
+
+        this.serverReceiverTask = new StartReceiverService(getApplicationContext());
+        serverReceiverTask.execute();
+
+
     }
 
     @Override
@@ -211,6 +236,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         super.onPause();
         unregisterReceiver(receiver);
         unregisterReceiver(mReceiver);
+        Intent intent = new Intent(this, StartReceiverService.class);
+        this.stopService(intent);
     }
 
     private void turnOnGPS(){
@@ -340,11 +367,13 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "CONNECTING TO PEERS");
         if(!wifiConnectFlag) {
             for (WifiP2pDevice peer : peers) {
-                WifiP2pConfig config = new WifiP2pConfig();
-                config.deviceAddress = peer.deviceAddress;
-                config.wps.setup = WpsInfo.PBC;
-                config.groupOwnerIntent = 0;
-                connect(config);
+                if(peer.deviceName.contains("Lenovo") || peer.deviceName.contains("jeby")) {
+                    WifiP2pConfig config = new WifiP2pConfig();
+                    config.deviceAddress = peer.deviceAddress;
+                    config.wps.setup = WpsInfo.PBC;
+                    config.groupOwnerIntent = 0;
+                    connect(config);
+                }
             }
 
         }
@@ -412,15 +441,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "CONNECTION INFO IS GROUP OWNER: " + (info.isGroupOwner  ? "TRUE" : "FALSE"));
 
         if(!this.isSender && info.isGroupOwner){
-            Intent intent = new Intent(this, SendWifiDataService.class);
-            intent.putExtra("server_mode", SendWifiDataService.EXTRAS_RUN_SERVER);
-            this.startService(intent);
+
         }
 
         if(!info.groupFormed){
-            Intent intent = new Intent(this, SendWifiDataService.class);
-            intent.putExtra("server_mode", SendWifiDataService.EXTRAS_CANCEL_SERVER);
-            this.startService(intent);
+
         }
 
         if(this.wifiConnectFlag && this.isSender && this.info != null){
@@ -589,7 +614,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "WIFICONNECTFLAG: " + (wifiConnectFlag ? "TRUE" : "FALSE"));
         Log.d(this.TAG, "IS SENDER: " + (isSender ? "TRUE" : "FALSE"));
         if(wifiConnectFlag && message.length() > 0) {
-            String host = this.info.groupOwnerAddress.toString();
+            String host = this.info.groupOwnerAddress.getHostAddress();
             int port = this.WIFIPORT;
             Intent intent = new Intent(this, SendWifiDataService.class);
             intent.putExtra(SendWifiDataService.EXTRAS_ADDRESS, host);
@@ -599,6 +624,18 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             Log.d(this.TAG, "STARTING SERVICE TO SEND MESSAGE");
             this.startService(intent);
         }
+    }
+
+    public class MySendWifiDataServiceReceiver extends BroadcastReceiver{
+
+        public static final String PROCESS_RESPONSE = "com.example.android.wifidirect.MySendWifiDataServiceReceiver.PROCESS_RESPONSE";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            disconnect();
+        }
+
+
     }
 
 
