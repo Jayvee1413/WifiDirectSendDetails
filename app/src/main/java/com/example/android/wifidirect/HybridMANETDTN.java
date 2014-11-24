@@ -12,7 +12,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -20,6 +19,7 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,11 +32,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,15 +52,41 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     private boolean isWifiP2pEnabled = false;
     public static final String TAG = "HYBRIDMANET";
+
+    public boolean isSender() {
+        return isSender;
+    }
+
+    public void setSender(boolean isSender) {
+        this.isSender = isSender;
+    }
+
     private boolean isSender = false;
 
-    private boolean wifiConnectFlag = false;
+    public boolean isWifiConnectFlag() {
+        return wifiConnectFlag;
+    }
+
+    public void setWifiConnectFlag(boolean wifiConnectFlag) {
+        this.wifiConnectFlag = wifiConnectFlag;
+    }
+
+    public boolean wifiConnectFlag = false;
     private WifiP2pInfo info;
     private static final int WIFIPORT = 8003;
     private static final int SOCKET_TIMEOUT = 5000;
     private GPSTracker gpsTracker;
-
     private String data_message;
+
+    public int getPeer_counter() {
+        return peer_counter;
+    }
+
+    public void setPeer_counter(int peer_counter) {
+        this.peer_counter = peer_counter;
+
+    }
+
     private int peer_counter = 0;
 
 
@@ -85,6 +110,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private BluetoothConnService mConnService = null;
     // ENDFOR BLUETOOTH
 
+
+    private final Handler sendDataServiceHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message message){
+            Log.d(TAG, "GOT MESSAGE FROM SERVICE");
+            setPeer_counter(getPeer_counter() - 1);
+            if(getPeer_counter() < 1){
+                setWifiConnectFlag(false);
+                setSender(false);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -202,8 +240,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         this.manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         this.channel = manager.initialize(this, getMainLooper(), null);
 
-        receiver = new WiFiDirectBroadcastReceiver(this.manager, this.channel, this);
-        registerReceiver(receiver, intentFilter);
+        //receiver = new WiFiDirectBroadcastReceiver(this.manager, this.channel, this);
+        //registerReceiver(receiver, intentFilter);
 
         if (!this.bluetoothAdapter.isEnabled()){
             this.bluetoothAdapter.enable();
@@ -283,10 +321,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     @Override
     public void onPeersAvailable(WifiP2pDeviceList peerList) {
-        Log.d("PEER LIST SIZE", Integer.toString(peerList.getDeviceList().size()));
-        Log.d("PEERS", "UPDATING PEERS");
-        Log.d("PEERS AVAILABLE CONNECT FLAG: ", (this.wifiConnectFlag ? "YES" : "NO"));
-        Log.d("PEERS AVAILABLE IS SENDER: ", (this.isSender ? "YES" : "NO"));
+        Log.d(this.TAG,  "PEER LIST SIZE: " + Integer.toString(peerList.getDeviceList().size()));
+        Log.d(this.TAG, "UPDATING PEERS");
+        Log.d(this.TAG,  "PEERS AVAILABLE CONNECT FLAG: "+ (this.wifiConnectFlag ? "YES" : "NO"));
+        Log.d(this.TAG, "PEERS AVAILABLE IS SENDER: "+ (this.isSender ? "YES" : "NO"));
         peers.clear();
         peers.addAll(peerList.getDeviceList());
         if(isSender){
@@ -370,6 +408,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "CONNECTION INFO WIFICONNECT FLAG: " + (this.wifiConnectFlag ? "TRUE" : "FALSE"));
         Log.d(this.TAG, "CONNECTION INFO IS SENDER FLAG: " + (this.isSender ? "TRUE" : "FALSE"));
         Log.d(this.TAG, "CONNECTION INFO INFO FLAG: " + (this.info != null ? "TRUE" : "FALSE"));
+        Log.d(this.TAG, "CONNECTION INFO IS GROUP OWNER: " + (info.isGroupOwner  ? "TRUE" : "FALSE"));
+
+        if(!this.isSender && info.isGroupOwner){
+            Intent intent = new Intent(this, SendWifiDataService.class);
+            intent.putExtra("server_mode", SendWifiDataService.EXTRAS_RUN_SERVER);
+            this.startService(intent);
+        }
+
+        if(!info.groupFormed){
+            Intent intent = new Intent(this, SendWifiDataService.class);
+            intent.putExtra("server_mode", SendWifiDataService.EXTRAS_CANCEL_SERVER);
+            this.startService(intent);
+        }
 
         if(this.wifiConnectFlag && this.isSender && this.info != null){
             sendWifiMessage(data_message);
@@ -507,46 +558,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         if(wifiConnectFlag && message.length() > 0) {
             String host = this.info.groupOwnerAddress.toString();
             int port = this.WIFIPORT;
-            Intent intent = new Intent(this, SendDataService.class);
-            intent.putExtra(SendDataService.EXTRAS_ADDRESS, host);
-            intent.putExtra(SendDataService.EXTRAS_MESSAGE, message);
-
+            Intent intent = new Intent(this, SendWifiDataService.class);
+            intent.putExtra(SendWifiDataService.EXTRAS_ADDRESS, host);
+            intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE, message);
+            intent.putExtra("MESSENGER", new Messenger(sendDataServiceHandler));
+            intent.putExtra("send_data", true);
+            Log.d(this.TAG, "STARTING SERVICE TO SEND MESSAGE");
             this.startService(intent);
-
-
-            /*
-            try {
-                Log.d(this.TAG, "MAKING SOCKET CONNECTION");
-                socket.bind(null);
-                socket.connect((new InetSocketAddress(host, port)), SOCKET_TIMEOUT);
-                if (socket != null) {
-                    OutputStream stream = socket.getOutputStream();
-                    OutputStreamWriter output_writer = new OutputStreamWriter(stream);
-                    Log.d(this.TAG, "SENDING MESSAGE: " + message);
-                    output_writer.write(message);
-                    output_writer.close();
-
-                }
-            } catch (Exception e) {
-                Log.d(this.TAG, "FAILED TO CREATE SOCKET CONNECTION: ", e);
-                socket = null;
-            } finally {
-                if(socket != null){
-                    if (socket.isConnected()) {
-                        try {
-                            socket.close();
-                            this.disconnect();
-                        } catch (IOException e) {
-                            // Give up
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-            */
         }
     }
-
 
 
 }
