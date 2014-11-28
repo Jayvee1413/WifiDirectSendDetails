@@ -159,6 +159,8 @@ public class DataDAO extends SQLiteOpenHelper {
         values.put(KEY_AGE, data.getAge());
         values.put(KEY_ADDRESS, data.getAddress());
         values.put(KEY_MESSAGE, data.getMessage());
+        values.put(KEY_LONGITUDE, data.getLongitude());
+        values.put(KEY_LATITUDE, data.getLatitude());
 
         // 3. updating row
         int i = db.update(TABLE_DATA, //table

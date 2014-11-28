@@ -143,7 +143,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
                 discoverWiFiPeers();
-                //doBluetoothDiscovery();
+                doBluetoothDiscovery();
             }
         });
 
@@ -159,7 +159,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 }
                 Log.d(TAG, "MESSAGE: " + data_message);
                 discoverWiFiPeers();
-                //doBluetoothDiscovery();
+                doBluetoothDiscovery();
             }
         });
 

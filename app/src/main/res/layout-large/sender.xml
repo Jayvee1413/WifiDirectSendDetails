@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TableRow
+
+		android:id="@+id/tableRow1"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:layout_marginLeft="15dp"
+		android:layout_marginTop="14dp">
+		<RelativeLayout
+			android:id="@+id/relativeLayout2"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent">
+			<EditText
+				android:id="@+id/phoneNumberText"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:layout_toLeftOf="@+id/browseContactsButton"
+				android:layout_alignParentLeft="true">
+				<requestFocus></requestFocus>
+			</EditText>
+			<Button
+				android:text="Browse Contacts"
+				android:gravity="right"
+				android:id="@+id/browseContactsButton"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_alignParentRight="true"
+				android:onClick="doLaunchContactPicker"></Button>
+		</RelativeLayout>
+
+	</TableRow>
+	<TableRow
+
+		android:id="@+id/tableRow1"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:layout_marginLeft="15dp"
+		android:layout_marginTop="14dp">
+		<RelativeLayout
+			android:id="@+id/relativeLayout2"
+			android:layout_height="wrap_content"
+			android:layout_width="match_parent">
+			<EditText
+				android:id="@+id/fileNameText"
+				android:layout_height="wrap_content"
+				android:layout_width="fill_parent"
+				android:layout_toLeftOf="@+id/browseFilesButton"
+				android:layout_alignParentLeft="true">
+				<requestFocus></requestFocus>
+			</EditText>
+			<Button
+				android:text="Browse Files"
+				android:gravity="right"
+				android:id="@+id/browseFilesButton"
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:layout_alignParentRight="true"
+				android:onClick="exploreFiles"></Button>
+		</RelativeLayout>
+
+	</TableRow>
+	<TextView
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="Message" />
+	<EditText
+		android:id="@+id/txtMessage"
+		android:layout_width="fill_parent"
+		android:layout_height="150px"
+		android:gravity="top" />
+	<Button
+		android:id="@+id/btnSendSMS"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="Send" />
+
+</LinearLayout>
