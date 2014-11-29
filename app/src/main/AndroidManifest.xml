@@ -53,6 +53,11 @@
 
         </activity>
 
+        <activity
+            android:name="combined2.FileExplore"
+            android:label="@string/title_activity_get_data" >
+        </activity>
+
         <service
             android:name="com.example.android.wifidirect.SendSavedData"
             android:enabled="true"

@@ -32,9 +32,10 @@ public class DataDAO extends SQLiteOpenHelper {
     private static final String KEY_MESSAGE = "message";
     private static final String KEY_LATITUDE = "latitude";
     private static final String KEY_LONGITUDE = "longitude";
+    private static final String KEY_IMAGE = "image";
     private static final String KEY_STATUS = "status";
 
-    private static final String[] COLUMNS = {KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE};
+    private static final String[] COLUMNS = {KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE, KEY_LATITUDE, KEY_LONGITUDE, KEY_IMAGE, KEY_STATUS};
 
     public DataDAO(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -51,6 +52,7 @@ public class DataDAO extends SQLiteOpenHelper {
                 "message VARCHAR(200)," +
                 "latitude VARCHAR(20)," +
                 "longitude VARCHAR(20)," +
+                "image BLOB," +
                 "status VARCHAR(10) DEFAULT 'QUEUED')";
 
         //create data table
@@ -80,7 +82,7 @@ public class DataDAO extends SQLiteOpenHelper {
         values.put(KEY_MESSAGE, data.getMessage());
         values.put(KEY_LONGITUDE, data.getLongitude());
         values.put(KEY_LATITUDE, data.getLatitude());
-
+        values.put(KEY_IMAGE, data.getImage());
 
         // 3. insert
         db.insert(TABLE_DATA, null, values);
@@ -105,7 +107,8 @@ public class DataDAO extends SQLiteOpenHelper {
         data.setAddress(cursor.getString(3));
         data.setMessage(cursor.getString(4));
         data.setLatitude(cursor.getDouble(5));
-        data.setLatitude(cursor.getDouble(5));
+        data.setLongitude(cursor.getDouble(6));
+        data.setImage(cursor.getString(7));
 
         Log.d("getData("+id+")", data.toString());
 
@@ -134,8 +137,8 @@ public class DataDAO extends SQLiteOpenHelper {
                 data.setAddress(cursor.getString(3));
                 data.setMessage(cursor.getString(4));
                 data.setLatitude(cursor.getDouble(5));
-                data.setLatitude(cursor.getDouble(5));
-
+                data.setLongitude(cursor.getDouble(6));
+                data.setImage(cursor.getString(7));
 
                 // Add Data to Data
                 data_list.add(data);
@@ -161,6 +164,7 @@ public class DataDAO extends SQLiteOpenHelper {
         values.put(KEY_MESSAGE, data.getMessage());
         values.put(KEY_LONGITUDE, data.getLongitude());
         values.put(KEY_LATITUDE, data.getLatitude());
+        values.put(KEY_IMAGE, data.getImage());
 
         // 3. updating row
         int i = db.update(TABLE_DATA, //table

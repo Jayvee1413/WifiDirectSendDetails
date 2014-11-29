@@ -75,6 +75,11 @@ public class Data {
 
     private double latitude;
     private double longitude;
+    private String image;
+
+    public String getImage(){ return image;}
+
+    public void setImage(String image){ this.image = image;}
 
     public String getStatus() {
         return status;

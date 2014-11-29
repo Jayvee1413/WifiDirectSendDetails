@@ -27,5 +27,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_hybrid_manetdtn">HybridMANETDTN</string>
+    <string name="get_picture_button">Attach picture from gallery</string>
 
 </resources>

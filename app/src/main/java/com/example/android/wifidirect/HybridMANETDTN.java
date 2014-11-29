@@ -15,24 +15,36 @@ import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.widget.ImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.io.InputStream;
+
+
+import combined2.FileExplore;
 
 
 public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListListener, DeviceActionListener, WifiP2pManager.ConnectionInfoListener{
@@ -46,6 +58,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     private StartReceiverService serverReceiverTask;
     private MySendWifiDataServiceReceiver mySendWifiDataServiceReceiver;
+
+    private static final int ACTIVITY_SELECT_IMAGE = 1003;
 
     private boolean isWifiP2pEnabled = false;
     public static final String TAG = "HYBRIDMANET";
@@ -71,6 +85,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private static final int SOCKET_TIMEOUT = 5000;
     private GPSTracker gpsTracker;
     private String data_message;
+    private String encoded_image;
     private boolean isBTSender = false;
 
     public int getPeer_counter() {
@@ -132,6 +147,14 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         this.discoverWiFiPeers();
         setContentView(R.layout.activity_hybrid_manetdtn);
         Intent i = new Intent(this, SendSavedData.class);
+
+        ImageView thumb = (ImageView) findViewById(R.id.image_thumb);
+
+        if (thumb.getDrawable() == null)
+        {
+            findViewById(R.id.image_thumb).setVisibility(View.GONE);
+        }
+
         data_message_list = new ArrayList<String>();
 
                 this.findViewById(R.id.btn_send_data).setOnClickListener(new View.OnClickListener() {
@@ -212,6 +235,35 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         switch (requestCode) {
             case REQUEST_ENABLE_BT:
                 startBTConnService();
+            case ACTIVITY_SELECT_IMAGE:
+                InputStream imageStream = null;
+
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = data.getData();
+                    try{
+                        imageStream = getContentResolver().openInputStream(selectedImage);
+                    }
+                    catch (IOException e){
+                        Log.e(TAG,"IMAGE SELECT", e);
+                    }
+                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+
+                    encoded_image = base64Encode(yourSelectedImage);
+                    Log.d(TAG, "IMAGE ENCODING: "+encoded_image.length());
+                    Log.d(TAG, "IMAGE ENCODING: "+encoded_image);
+
+
+                    try{
+                        ((ImageView)findViewById(R.id.image_thumb)).setImageBitmap(decodeUri(selectedImage));
+                    }
+                    catch (FileNotFoundException e){
+                        Log.e(TAG, "Image not found",e);
+                    }
+                    findViewById(R.id.image_thumb).setVisibility(View.VISIBLE);
+                }
+                else{
+                    findViewById(R.id.image_thumb).setVisibility(View.GONE);
+                }
         }
     }
 
@@ -669,5 +721,58 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     }
 
+    public void exploreFiles(View view) {
+        Log.i("INSIDE EXPLORE FILES", "CLICKED FILE");
+        Intent i = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(i, ACTIVITY_SELECT_IMAGE);
+    }
+
+    private Bitmap decodeUri(Uri selectedImage) throws FileNotFoundException {
+
+        // Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
+
+        // The new size we want to scale to
+        final int REQUIRED_SIZE = 100;
+
+        // Find the correct scale value. It should be the power of 2.
+        int width_tmp = o.outWidth, height_tmp = o.outHeight;
+        int scale = 1;
+        while (true) {
+            if (width_tmp / 2 < REQUIRED_SIZE
+                    || height_tmp / 2 < REQUIRED_SIZE) {
+                break;
+            }
+            width_tmp /= 2;
+            height_tmp /= 2;
+            scale *= 2;
+        }
+
+        // Decode with inSampleSize
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
+
+    }
+
+    public static String base64Encode(Bitmap image)
+    {
+        Bitmap immagex=image;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] b = baos.toByteArray();
+        String imageEncoded = Base64.encodeToString(b,Base64.DEFAULT);
+
+        Log.e("LOOK", imageEncoded);
+        return imageEncoded;
+    }
+    public static Bitmap base64Decode(String input)
+    {
+        byte[] decodedByte = Base64.decode(input, 0);
+        return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+    }
 
 }

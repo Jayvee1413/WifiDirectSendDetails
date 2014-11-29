@@ -49,12 +49,24 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/messageLabel"/>
+        <ImageView
+            android:id="@+id/image_thumb"
+            android:layout_width="100dip"
+            android:layout_height="100dip"
+            android:layout_below="@+id/messageField"/>
+        <Button
+            android:id="@+id/btn_get_picture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/get_picture_button"
+            android:onClick="exploreFiles"
+            android:layout_below="@id/image_thumb"/>
         <Button
             android:id="@+id/btn_send_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send_data_to_server_button"
-            android:layout_below="@id/messageField"/>
+            android:layout_below="@id/btn_get_picture"/>
 
         <Button
             android:id="@+id/btn_send_saved_data"
