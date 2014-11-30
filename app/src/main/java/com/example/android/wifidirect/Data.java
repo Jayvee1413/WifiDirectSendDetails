@@ -10,6 +10,17 @@ import java.util.Iterator;
  */
 public class Data {
 
+
+
+    private int id;
+    private String name;
+    private String age;
+    private String address;
+    private String message;
+    private double latitude;
+    private double longitude;
+    private String image;
+
     public int getId() {
         return id;
     }
@@ -17,9 +28,6 @@ public class Data {
     public void setId(int id) {
         this.id = id;
     }
-
-    private int id;
-    private String name;
 
     public String getName() {
         return name;
@@ -53,10 +61,6 @@ public class Data {
         this.message = message;
     }
 
-    private String age;
-    private String address;
-    private String message;
-
     public double getLatitude() {
         return latitude;
     }
@@ -73,9 +77,6 @@ public class Data {
         this.longitude = longitude;
     }
 
-    private double latitude;
-    private double longitude;
-    private String image;
 
     public String getImage(){ return image;}
 
@@ -115,6 +116,7 @@ public class Data {
             json_data.put("latitude", this.latitude);
             json_data.put("longitude", this.longitude);
             json_data.put("status", this.status);
+            json_data.put("image", this.image);
         } catch (JSONException e) {
             e.printStackTrace();
         }

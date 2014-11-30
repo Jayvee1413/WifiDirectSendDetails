@@ -221,6 +221,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             data_object.put("message", message);
             data_object.put("latitude", latitude);
             data_object.put("longitude", longitude);
+            data_object.put("image", encoded_image);
             return data_object.toString();
 
         } catch (JSONException e) {

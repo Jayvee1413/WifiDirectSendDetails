@@ -198,8 +198,6 @@ public class SenderInitial extends Activity {
 				break;
 				
 			}
-			
-			
 
 		} else {
 			Log.w("OnActivityResult", "Warning: activity result not ok");

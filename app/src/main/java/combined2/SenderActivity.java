@@ -1,5 +1,5 @@
 package combined2;
-
+import com.example.android.wifidirect.R;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,11 +43,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.android.wifidirect.R;
-
-import combined2.Base64FileEncoder;
-import combined2.LogInSettings;
-import combined2.Sender3GListener;
 
 public class SenderActivity extends Activity {
     private String phoneNum;
@@ -255,7 +250,6 @@ public class SenderActivity extends Activity {
             Thread smsthread = new smsThread();
             smsthread.start();
 
-
             if (isOnline(getBaseContext())
                     && intent.getStringExtra("isOnline").equals("1")) {
                 receiverIsOnline = true;
@@ -269,16 +263,18 @@ public class SenderActivity extends Activity {
                 //Thread threegthread = new threeGThread();
                 //threegthread.start();
             } else {
-                receiverIsOnline = false;
-                handler.post(new Runnable() {
+                /*
+				receiverIsOnline = false;
+				handler.post(new Runnable() {
 
-                    public void run() {
-                        txtCurrentChannel.setText("MMS");
-                    }
-                });
-                is3g = false;
-                Log.e("INITIAL MMSTHREAD", "I AM AT BRECEIVER");
-                sendViaMms(headtracker);
+					public void run() {
+						txtCurrentChannel.setText("MMS");
+					}
+				});
+				is3g = false;
+				Log.e("INITIAL MMSTHREAD", "I AM AT BRECEIVER");
+				sendViaMms(headtracker);
+				*/
             }
             started = true;
             registerReceiver(threeGMonitorBroadcastReceiver, gIntentFilter);
@@ -360,27 +356,29 @@ public class SenderActivity extends Activity {
             }
         }
         // MMS
-        if ((intent.getStringExtra("start?").toString())
-                .equals("sendAnotherMms")) {
+        /*
+		if ((intent.getStringExtra("start?").toString())
+				.equals("sendAnotherMms")) {
+			
+			Log.e("MMS", "SEND ANOTHER MMS");
+			mmsReceived = true;
+			try {
+				if (headtracker < packetCount && !is3g && headtracker <= tailtracker) {
+					handler.post(new Runnable() {
 
-            Log.e("MMS", "SEND ANOTHER MMS");
-            mmsReceived = true;
-            try {
-                if (headtracker < packetCount && !is3g && headtracker <= tailtracker) {
-                    handler.post(new Runnable() {
+						public void run() {
+							txtCurrentChannel.setText("MMS");
+						}
+					});
 
-                        public void run() {
-                            txtCurrentChannel.setText("MMS");
-                        }
-                    });
+					send1mms(phoneNum);
+				}
 
-                    send1mms(phoneNum);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		*/
         // 3G
         if ((intent.getStringExtra("start?").toString())
                 .equals("receiverConnectivity")) {
@@ -406,15 +404,17 @@ public class SenderActivity extends Activity {
 
 
             } else {
-                receiverIsOnline = false;
-                handler.post(new Runnable() {
+                /*
+				receiverIsOnline = false;
+				handler.post(new Runnable() {
 
-                    public void run() {
-                        txtCurrentChannel.setText("MMS");
-                    }
-                });
-                Log.e("SHIFT TO MMS","SHIFT TO MMS");
-                sendViaMms(headtracker);
+					public void run() {
+						txtCurrentChannel.setText("MMS");
+					}
+				});
+				Log.e("SHIFT TO MMS","SHIFT TO MMS");
+				sendViaMms(headtracker);
+				*/
             }
         }
     }
