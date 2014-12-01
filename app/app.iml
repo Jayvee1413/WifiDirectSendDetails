@@ -83,6 +83,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="support-v4-18.0.0" level="project" />
     <orderEntry type="library" exported="" name="asmack-2010.05.07" level="project" />
+    <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
   </component>
 </module>
 

@@ -171,8 +171,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 saveData(data_message);
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
-                //discoverWiFiPeers();
-                doBluetoothDiscovery();
+                discoverWiFiPeers();
+                //doBluetoothDiscovery();
             }
         });
 
@@ -191,6 +191,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 doBluetoothDiscovery();
             }
         });
+
+        this.serverReceiverTask = new StartReceiverService(getApplicationContext());
+        serverReceiverTask.execute();
 
     }
 
@@ -300,8 +303,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         mySendWifiDataServiceReceiver = new MySendWifiDataServiceReceiver();
         registerReceiver(mySendWifiDataServiceReceiver, mySendWifiDataServiceReceiverfilter);
 
-        this.serverReceiverTask = new StartReceiverService(getApplicationContext());
-        serverReceiverTask.execute();
+
 
 
     }
@@ -329,7 +331,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void turnOnRadios(){
-        if (!this.wifiManager.isWifiEnabled()) {
+        int current_version = android.os.Build.VERSION.SDK_INT;
+        if (!this.wifiManager.isWifiEnabled() && current_version > 15) {
             this.wifiManager.setWifiEnabled(true);
         }
         // add necessary intent values to be matched.
@@ -443,7 +446,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "CONNECTING TO PEERS");
         if(!wifiConnectFlag) {
             for (WifiP2pDevice peer : peers) {
-                if(peer.deviceName.contains("Lenovo") || peer.deviceName.contains("jeby")) {
+                if(peer.deviceName.contains("Lenovo") || peer.deviceName.contains("jeby") || peer.deviceName.contains("topher")) {
                     WifiP2pConfig config = new WifiP2pConfig();
                     config.deviceAddress = peer.deviceAddress;
                     config.wps.setup = WpsInfo.PBC;
@@ -712,15 +715,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         Log.d(this.TAG, "INSIDE SEND WIFI MESSAGE");
         Log.d(this.TAG, "WIFICONNECTFLAG: " + (wifiConnectFlag ? "TRUE" : "FALSE"));
         Log.d(this.TAG, "IS SENDER: " + (isSender ? "TRUE" : "FALSE"));
+        Log.d(this.TAG, "MESSAGE SIZE: " + message.length());
         if(wifiConnectFlag && message.length() > 0) {
             String host = this.info.groupOwnerAddress.getHostAddress();
             int port = this.WIFIPORT;
             Intent intent = new Intent(this, SendWifiDataService.class);
             intent.putExtra(SendWifiDataService.EXTRAS_ADDRESS, host);
-            intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE, message);
+            SendWifiDataService.message = message;;
             intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE_LIST, message_list);
             intent.putExtra("MESSENGER", new Messenger(sendDataServiceHandler));
             intent.putExtra("send_data", true);
+
+            Log.d(this.TAG, "MESSAGE SIZE: " + message.length());
+
             Log.d(this.TAG, "STARTING SERVICE TO SEND MESSAGE");
             this.startService(intent);
         }
@@ -785,9 +792,9 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         byte[] b = baos.toByteArray();
 
         // Check if image size is greater than 256KB
-        if (b.length > 256000) {
+        if (b.length > 262144) {
             baos = new ByteArrayOutputStream();
-            immagex.compress(Bitmap.CompressFormat.JPEG, 100 - Math.round((((float)256000/(float)b.length)*100)), baos);
+            immagex.compress(Bitmap.CompressFormat.JPEG, 100 - Math.round((((float)262144/(float)b.length)*100)), baos);
             b = baos.toByteArray();
         }
 

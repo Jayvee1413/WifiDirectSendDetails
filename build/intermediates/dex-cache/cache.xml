@@ -13,5 +13,11 @@
         jumboMode="false"
         revision="20.0.0"
         sha1="44ec51e9d395a47aab135e5e1b556c0007442156"/>
+    <item
+        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/commons-io-2.4-68a5d58feb7b151be8d3133a44d692e5f510cee4.jar"
+        jar="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/src/main/libs/commons-io-2.4.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="b1b6ea3b7e4aa4f492509a4952029cd8e48019ad"/>
 
 </pre-dex-items>
