@@ -254,11 +254,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     catch (IOException e){
                         Log.e(TAG,"IMAGE SELECT", e);
                     }
-                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                    BitmapFactory.Options bitmapFactoryOptions = new BitmapFactory.Options();
+                    bitmapFactoryOptions.inScaled = false;
+                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream, null, bitmapFactoryOptions);
+
+                    Log.d("LOOK " , Integer.toString(yourSelectedImage.getWidth()) + " " +Integer.toString(yourSelectedImage.getHeight()) );
 
                     encoded_image = base64Encode(yourSelectedImage);
                     Log.d(TAG, "IMAGE ENCODING: "+encoded_image.length());
-                    Log.d(TAG, "IMAGE ENCODING: "+encoded_image);
+                    //Log.d(TAG, "IMAGE ENCODING: "+encoded_image);
 
 
                     try{
@@ -773,11 +777,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     {
         Bitmap immagex=image;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] b = baos.toByteArray();
+
+        // Check if image size is greater than 256KB
+        if (b.length > 256000) {
+            baos = new ByteArrayOutputStream();
+            immagex.compress(Bitmap.CompressFormat.JPEG, 100 - Math.round((((float)256000/(float)b.length)*100)), baos);
+            b = baos.toByteArray();
+        }
+
         String imageEncoded = Base64.encodeToString(b,Base64.DEFAULT);
 
-        Log.e("LOOK", imageEncoded);
         return imageEncoded;
     }
     public static Bitmap base64Decode(String input)
