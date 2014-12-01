@@ -172,7 +172,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
                 //discoverWiFiPeers();
-                //doBluetoothDiscovery();
+                doBluetoothDiscovery();
             }
         });
 
@@ -622,11 +622,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     //mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case BT_MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
+                    //byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     //String readMessage = new String(readBuf, 0, msg.arg1);
                     //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
-                    String readMessage = new String(readBuf,0,msg.arg1);
+                    String readMessage = (String) msg.obj;
                     Log.d(HybridMANETDTN.TAG,"Saving Message to DB "+readMessage);
                     if(readMessage.length() > 0 && !readMessage.equals("ACK")){
                         saveDataDAO(readMessage);
@@ -654,6 +654,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         // Check that there's actually something to send
         if (message.length() > 0) {
+            message += "</END>";
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
             mConnService.write(send);
@@ -686,6 +687,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             String message = json_data.getString("message");
             Double latitude = json_data.getDouble("latitude");
             Double longitude = json_data.getDouble("longitude");
+            String image = json_data.getString("image");
 
             Log.i(HybridMANETDTN.TAG, "NUMBER: " + number);
             Log.i(HybridMANETDTN.TAG, "NAME: " + name);
@@ -694,9 +696,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             Log.i(HybridMANETDTN.TAG, "MESSAGE: " + message);
             Log.i(HybridMANETDTN.TAG, "LAT: " + latitude.toString());
             Log.i(HybridMANETDTN.TAG, "LONG: " + longitude.toString());
+            Log.i(HybridMANETDTN.TAG, "IMAGE: " + image);
 
             DataDAO data_dao = new DataDAO(getApplicationContext());
-            Data data = new Data(number, name, age, address, message, latitude, longitude, encoded_image);
+            Data data = new Data(number, name, age, address, message, latitude, longitude, image);
             data_dao.addData(data);
 
         } catch (JSONException e) {
@@ -808,7 +811,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     public String createFile(String data){
         String file_type = ".txt";
-        String folder_name = Environment.getDataDirectory()+ "/hybridmanetdtn";
+        String folder_name = Environment.getExternalStorageDirectory()+ "/hybridmanetdtn";
         File folder = new File(folder_name);
         Date cDate = new Date();
         String fDate = new SimpleDateFormat("yyyyMMdd-HHmmss").format(cDate);
@@ -829,6 +832,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 myOutWriter.close();
                 fOut.close();
             } catch (IOException e) {
+                Log.e(HybridMANETDTN.TAG, "ERROR CREATING FILE");
                 e.printStackTrace();
             }
             return file_name;

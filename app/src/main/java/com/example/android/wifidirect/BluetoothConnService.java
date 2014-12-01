@@ -44,6 +44,7 @@ public class BluetoothConnService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
+    private String fullMessage;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -395,8 +396,9 @@ public class BluetoothConnService {
 
         public void run() {
             Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024*512];
             int bytes;
+            fullMessage = "";
 
             // Keep listening to the InputStream while connected
             while (true) {
@@ -413,12 +415,22 @@ public class BluetoothConnService {
                         this.cancel();
                     }
                     else if (receivedMessage.length()>0){
-                        byte[] send = new String("ACK").getBytes();
-                        this.write(send);
+                        fullMessage += receivedMessage;
+                        Log.d(TAG, "TESTING PO " + receivedMessage.substring(receivedMessage.length() - 6));
+
+                        if (receivedMessage.substring(receivedMessage.length() - 6).equals("</END>")) {
+                            Log.d(TAG, "PASOK HEREEEEEE");
+                            fullMessage = fullMessage.substring(0,fullMessage.length()-6);
+                            byte[] send = new String("ACK").getBytes();
+                            this.write(send);
+                            Log.d(TAG, "Full message" + fullMessage);
+
+                            mHandler.obtainMessage(HybridMANETDTN.BT_MESSAGE_READ, fullMessage).sendToTarget();
+                        }
+
                     }
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(HybridMANETDTN.BT_MESSAGE_READ, bytes, -1, buffer).sendToTarget();
 
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
