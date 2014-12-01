@@ -145,19 +145,20 @@ public final class R {
         public static final int enable_p2p_button=0x7f06000b;
         public static final int get_file_button=0x7f06000c;
         public static final int get_picture_button=0x7f06000d;
-        public static final int group_owner_text=0x7f06000e;
-        public static final int hello_world=0x7f06000f;
-        public static final int label_me=0x7f060010;
-        public static final int label_peers=0x7f060011;
-        public static final int message=0x7f060012;
-        public static final int name=0x7f060013;
-        public static final int no=0x7f060014;
-        public static final int p2p_off_warning=0x7f060015;
-        public static final int send_data_to_server_button=0x7f060016;
-        public static final int send_saved_data_to_server_button=0x7f060017;
-        public static final int show_data_button=0x7f060018;
-        public static final int title_activity_get_data=0x7f060019;
-        public static final int title_activity_hybrid_manetdtn=0x7f06001a;
-        public static final int yes=0x7f06001b;
+        public static final int gps_disabled_message=0x7f06000e;
+        public static final int group_owner_text=0x7f06000f;
+        public static final int hello_world=0x7f060010;
+        public static final int label_me=0x7f060011;
+        public static final int label_peers=0x7f060012;
+        public static final int message=0x7f060013;
+        public static final int name=0x7f060014;
+        public static final int no=0x7f060015;
+        public static final int p2p_off_warning=0x7f060016;
+        public static final int send_data_to_server_button=0x7f060017;
+        public static final int send_saved_data_to_server_button=0x7f060018;
+        public static final int show_data_button=0x7f060019;
+        public static final int title_activity_get_data=0x7f06001a;
+        public static final int title_activity_hybrid_manetdtn=0x7f06001b;
+        public static final int yes=0x7f06001c;
     }
 }
