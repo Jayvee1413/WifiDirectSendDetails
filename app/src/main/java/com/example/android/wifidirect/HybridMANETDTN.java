@@ -17,6 +17,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
@@ -36,9 +37,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.io.InputStream;
@@ -162,11 +168,11 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             public void onClick(View v) {
                 isSender = true;
                 data_message = getDataOut();
-
+                saveData(data_message);
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
-                discoverWiFiPeers();
-                doBluetoothDiscovery();
+                //discoverWiFiPeers();
+                //doBluetoothDiscovery();
             }
         });
 
@@ -188,13 +194,13 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
     }
 
-
-
     private String getDataOut(){
+        EditText mNumber = (EditText) this.findViewById(R.id.cellNumberField);
         EditText mName = (EditText) this.findViewById(R.id.nameField);
         EditText mAddress = (EditText) this.findViewById(R.id.addressField);
         EditText mAge = (EditText) this.findViewById(R.id.ageField);
         EditText mMessage = (EditText) this.findViewById(R.id.messageField);
+        String number = mNumber.getText().toString();
         String name = mName.getText().toString();
         String address = mAddress.getText().toString();
         String age = mAge.getText().toString();
@@ -215,6 +221,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
         JSONObject data_object = new JSONObject();
         try {
+            data_object.put("number", number);
             data_object.put("name", name);
             data_object.put("address", address);
             data_object.put("age", age);
@@ -668,12 +675,15 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         JSONObject json_data = null;
         try {
             json_data = new JSONObject(result);
+            String number = json_data.getString("number");
             String name = json_data.getString("name");
             String age = json_data.getString("age");
             String address = json_data.getString("address");
             String message = json_data.getString("message");
             Double latitude = json_data.getDouble("latitude");
             Double longitude = json_data.getDouble("longitude");
+
+            Log.i(HybridMANETDTN.TAG, "NUMBER: " + number);
             Log.i(HybridMANETDTN.TAG, "NAME: " + name);
             Log.i(HybridMANETDTN.TAG, "AGE: " + age);
             Log.i(HybridMANETDTN.TAG, "ADDRESS: " + address);
@@ -682,7 +692,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             Log.i(HybridMANETDTN.TAG, "LONG: " + longitude.toString());
 
             DataDAO data_dao = new DataDAO(getApplicationContext());
-            Data data = new Data(name, age, address, message, latitude, longitude);
+            Data data = new Data(number, name, age, address, message, latitude, longitude, encoded_image);
             data_dao.addData(data);
 
         } catch (JSONException e) {
@@ -774,6 +784,45 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     {
         byte[] decodedByte = Base64.decode(input, 0);
         return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+    }
+
+    public void saveData(String data){
+
+        String file_name = createFile(data);
+        FileDataDAO fileDataDAO = new FileDataDAO(this);
+        FileData fileData = new FileData(file_name);
+        fileDataDAO.addData(fileData);
+    }
+
+    public String createFile(String data){
+        String file_type = ".txt";
+        String folder_name = Environment.getDataDirectory()+ "/hybridmanetdtn";
+        File folder = new File(folder_name);
+        Date cDate = new Date();
+        String fDate = new SimpleDateFormat("yyyyMMdd-HHmmss").format(cDate);
+        String file_name = folder_name + "/data_" + fDate + file_type;
+        Log.e(TAG, file_name);
+        boolean success = true;
+        if (!folder.exists()) {
+            success = folder.mkdir();
+        }
+        if (success) {
+
+            File file = new File(file_name);
+            try {
+                file.createNewFile();
+                FileOutputStream fOut = new FileOutputStream(file);
+                OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                myOutWriter.append(data);
+                myOutWriter.close();
+                fOut.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return file_name;
+
+        }
+        return "";
     }
 
 }

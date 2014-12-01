@@ -16,7 +16,7 @@ import java.util.List;
 public class DataDAO extends SQLiteOpenHelper {
 
     // Database version
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 5;
     // Database Name
     private static final String DATABASE_NAME = "DataDB";
 
@@ -26,6 +26,7 @@ public class DataDAO extends SQLiteOpenHelper {
 
     // Data Table Columns names
     private static final String KEY_ID = "id";
+    private static final String KEY_NUMBER = "number";
     private static final String KEY_NAME = "name";
     private static final String KEY_AGE = "age";
     private static final String KEY_ADDRESS = "address";
@@ -35,7 +36,7 @@ public class DataDAO extends SQLiteOpenHelper {
     private static final String KEY_IMAGE = "image";
     private static final String KEY_STATUS = "status";
 
-    private static final String[] COLUMNS = {KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE, KEY_LATITUDE, KEY_LONGITUDE, KEY_IMAGE, KEY_STATUS};
+    private static final String[] COLUMNS = {KEY_NUMBER, KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE, KEY_LATITUDE, KEY_LONGITUDE, KEY_IMAGE, KEY_STATUS};
 
     public DataDAO(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -46,6 +47,7 @@ public class DataDAO extends SQLiteOpenHelper {
         // SQL statement to create data table
         String CREATE_DATA_TABLE = "CREATE TABLE data ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "number VARCHAR(60), " +
                 "name VARCHAR(60), " +
                 "age INT(3), " +
                 "address VARCHAR(100), " +
@@ -76,6 +78,7 @@ public class DataDAO extends SQLiteOpenHelper {
 
         // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
+        values.put(KEY_NUMBER, data.getNumber());
         values.put(KEY_NAME, data.getName());
         values.put(KEY_AGE, data.getAge());
         values.put(KEY_ADDRESS, data.getAddress());
@@ -102,13 +105,15 @@ public class DataDAO extends SQLiteOpenHelper {
 
         Data data = new Data();
         data.setId(Integer.parseInt(cursor.getString(0)));
-        data.setName(cursor.getString(1));
-        data.setAge(cursor.getString(2));
-        data.setAddress(cursor.getString(3));
-        data.setMessage(cursor.getString(4));
-        data.setLatitude(cursor.getDouble(5));
-        data.setLongitude(cursor.getDouble(6));
-        data.setImage(cursor.getString(7));
+        data.setNumber(cursor.getString(1));
+        data.setName(cursor.getString(2));
+        data.setAge(cursor.getString(3));
+        data.setAddress(cursor.getString(4));
+        data.setMessage(cursor.getString(5));
+        data.setLatitude(cursor.getDouble(6));
+        data.setLongitude(cursor.getDouble(7));
+        data.setImage(cursor.getString(8));
+        data.setStatus(cursor.getString(9));
 
         Log.d("getData("+id+")", data.toString());
 
@@ -133,12 +138,14 @@ public class DataDAO extends SQLiteOpenHelper {
                 data = new Data();
                 data.setId(Integer.parseInt(cursor.getString(0)));
                 data.setName(cursor.getString(1));
-                data.setAge(cursor.getString(2));
-                data.setAddress(cursor.getString(3));
-                data.setMessage(cursor.getString(4));
-                data.setLatitude(cursor.getDouble(5));
-                data.setLongitude(cursor.getDouble(6));
-                data.setImage(cursor.getString(7));
+                data.setNumber(cursor.getString(2));
+                data.setAge(cursor.getString(3));
+                data.setAddress(cursor.getString(4));
+                data.setMessage(cursor.getString(5));
+                data.setLatitude(cursor.getDouble(6));
+                data.setLongitude(cursor.getDouble(7));
+                data.setImage(cursor.getString(8));
+                data.setStatus(cursor.getString(9));
 
                 // Add Data to Data
                 data_list.add(data);
@@ -159,12 +166,14 @@ public class DataDAO extends SQLiteOpenHelper {
         // 2. create ContentValues to add key "column"/value
         ContentValues values = new ContentValues();
         values.put(KEY_NAME, data.getName());
+        values.put(KEY_NUMBER, data.getNumber());
         values.put(KEY_AGE, data.getAge());
         values.put(KEY_ADDRESS, data.getAddress());
         values.put(KEY_MESSAGE, data.getMessage());
         values.put(KEY_LONGITUDE, data.getLongitude());
         values.put(KEY_LATITUDE, data.getLatitude());
         values.put(KEY_IMAGE, data.getImage());
+        values.put(KEY_STATUS, data.getStatus());
 
         // 3. updating row
         int i = db.update(TABLE_DATA, //table

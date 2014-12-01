@@ -109,12 +109,14 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
             JSONObject json_data = null;
             try {
                 json_data = new JSONObject(result);
+                String number = json_data.getString("number");
                 String name = json_data.getString("name");
                 String age = json_data.getString("age");
                 String address = json_data.getString("address");
                 String message = json_data.getString("message");
                 Double latitude = json_data.getDouble("latitude");
                 Double longitude = json_data.getDouble("longitude");
+                String image = json_data.getString("image");
                 String status = "QUEUED";
                 Log.i(HybridMANETDTN.TAG, "NAME: " + name);
                 Log.i(HybridMANETDTN.TAG, "AGE: " + age);
@@ -123,7 +125,7 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
 
 
                 DataDAO data_dao = new DataDAO(context);
-                Data data = new Data(name, age, address, message, latitude, longitude);
+                Data data = new Data(number, name, age, address, message, latitude, longitude, image);
                 data_dao.addData(data);
 
             } catch (JSONException e) {

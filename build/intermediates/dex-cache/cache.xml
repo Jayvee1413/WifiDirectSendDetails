@@ -2,10 +2,16 @@
 <pre-dex-items>
 
     <item
-        dex="/Users/xtop/255/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/asmack-2010.05.07-0b2d38fb143c0d225909c2155d98311124c859ef.jar"
-        jar="/Users/xtop/255/WifiDirectSendDetails/app/src/main/libs/asmack-2010.05.07.jar"
+        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/asmack-2010.05.07-21ceead288164612ee39102674921e792c85b278.jar"
+        jar="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/src/main/libs/asmack-2010.05.07.jar"
         jumboMode="false"
         revision="20.0.0"
         sha1="78842451dc1b8fec85ab6c16ce80e5f980bf7339"/>
+    <item
+        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/support-v4-18.0.0-aa1f1aa6245e7edff3bd3d40480e4f08a0f0af2f.jar"
+        jar="/Users/vincentsantos/Downloads/adt-bundle-mac-x86_64-20140702/sdk/extras/android/m2repository/com/android/support/support-v4/18.0.0/support-v4-18.0.0.jar"
+        jumboMode="false"
+        revision="20.0.0"
+        sha1="44ec51e9d395a47aab135e5e1b556c0007442156"/>
 
 </pre-dex-items>

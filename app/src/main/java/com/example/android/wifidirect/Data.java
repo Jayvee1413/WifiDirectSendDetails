@@ -13,6 +13,7 @@ public class Data {
 
 
     private int id;
+    private String number;
     private String name;
     private String age;
     private String address;
@@ -77,7 +78,6 @@ public class Data {
         this.longitude = longitude;
     }
 
-
     public String getImage(){ return image;}
 
     public void setImage(String image){ this.image = image;}
@@ -95,20 +95,23 @@ public class Data {
 
     }
 
-    public Data(String name, String age, String address, String message, Double latitude, Double longitude){
+    public Data(String number, String name, String age, String address, String message, Double latitude, Double longitude, String image){
         super();
+        this.number = number;
         this.name = name;
         this.age = age;
         this.address = address;
         this.message = message;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.image = image;
         this.status = "QUEUED";
     }
     
     public JSONObject getData(){
         JSONObject json_data = new JSONObject();
         try {
+            json_data.put("number", this.number);
             json_data.put("name", this.name);
             json_data.put("age", this.age);
             json_data.put("address", this.address);
@@ -117,6 +120,7 @@ public class Data {
             json_data.put("longitude", this.longitude);
             json_data.put("status", this.status);
             json_data.put("image", this.image);
+            json_data.put("status", this.status);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -140,5 +144,13 @@ public class Data {
             }
         }
         return output;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
     }
 }
