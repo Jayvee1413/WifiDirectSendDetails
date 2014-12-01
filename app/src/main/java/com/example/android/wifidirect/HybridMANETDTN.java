@@ -1,10 +1,12 @@
 package com.example.android.wifidirect;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.LocationManager;
@@ -21,6 +23,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.Base64;
 import android.view.Menu;
@@ -319,17 +322,45 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     }
 
     private void turnOnGPS(){
-        if (!((LocationManager) this.getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER)){
-            Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
-            intent.putExtra("enabled", true);
-            this.sendBroadcast(intent);
-            this.gpsTracker = new GPSTracker(this);
-            if(this.gpsTracker.canGetLocation()){
-                this.gpsTracker.getLocation();
-            }
+        Log.d (TAG, "GPS PASOK");
+        if (!((LocationManager) this.getSystemService(LOCATION_SERVICE)).isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Log.d (TAG, "GPS PASOK DITO");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.gps_disabled_message)
+                    .setCancelable(false)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(intent);
+                            Intent intent2 = new Intent("android.location.GPS_ENABLED_CHANGE");
+                            intent2.putExtra("enabled", true);
+                            sendBroadcast(intent2);
+                            startGPSTracker();
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
+        else{
+            startGPSTracker();
         }
     }
 
+    private void startGPSTracker(){
+        gpsTracker = new GPSTracker(this);
+        if(gpsTracker.canGetLocation()){
+            Log.d (TAG, "GETTING LOCATION2");
+            gpsTracker.getLocation();
+        }
+        else{
+            Log.d (TAG, "COULD NOT GET LOCATION");
+        }
+    }
     private void turnOnRadios(){
         int current_version = android.os.Build.VERSION.SDK_INT;
         if (!this.wifiManager.isWifiEnabled() && current_version > 15) {
