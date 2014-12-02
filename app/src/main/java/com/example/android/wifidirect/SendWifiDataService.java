@@ -40,6 +40,7 @@ public class SendWifiDataService extends IntentService {
         Log.d(HybridMANETDTN.TAG, "INSIDE SEND DATA SERVCIE");
         Context context = getApplicationContext();
         String host = intent.getExtras().getString(EXTRAS_ADDRESS);
+        String file_name = intent.getExtras().getString("file_name");
         Messenger messenger = (Messenger)intent.getExtras().get("MESSENGER");
         ArrayList<String> message_list = (ArrayList<String>)intent.getExtras().get(EXTRAS_MESSAGE_LIST);
         Boolean send_data = intent.getExtras().getBoolean("send_data");
@@ -57,6 +58,8 @@ public class SendWifiDataService extends IntentService {
                     OutputStream stream = socket.getOutputStream();
                     input_stream  = socket.getInputStream();
                     //OutputStreamWriter output_writer = new OutputStreamWriter(stream);
+                    // SEND FIRST LINE
+                    stream.write(new String("<FILENAME>"+file_name+"</FILENAME>").getBytes());
                     for(String message_data: message_list) {
                         Log.d(HybridMANETDTN.TAG, "SENDING MESSAGE: " + message_data);
                         Log.d(HybridMANETDTN.TAG, "MESSAGE LENGTH: " + message_data.length());

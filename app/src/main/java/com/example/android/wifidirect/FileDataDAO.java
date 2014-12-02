@@ -57,8 +57,6 @@ public class FileDataDAO extends SQLiteOpenHelper {
     }
 
     public void addData(FileData fileData){
-        Log.d(HybridMANETDTN.TAG, fileData.toString());
-
         // 1. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();
 

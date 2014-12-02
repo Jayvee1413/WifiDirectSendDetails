@@ -67,7 +67,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     private StartReceiverService serverReceiverTask;
     private MySendWifiDataServiceReceiver mySendWifiDataServiceReceiver;
-
+    private String file_name = "";
     private static final int ACTIVITY_SELECT_IMAGE = 1003;
 
     private boolean isWifiP2pEnabled = false;
@@ -166,12 +166,21 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         data_message_list = new ArrayList<String>();
 
-                this.findViewById(R.id.btn_send_data).setOnClickListener(new View.OnClickListener() {
+        this.findViewById(R.id.btn_send_data).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isSender = true;
                 data_message = getDataOut();
-                saveData(data_message);
+                String mobile_number = "";
+                JSONObject json_data = null;
+                try {
+                    json_data = new JSONObject(data_message);
+                    mobile_number = json_data.getString("number");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                file_name = saveData(data_message, mobile_number, null, getApplicationContext());
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
                 discoverWiFiPeers();
@@ -756,6 +765,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
             intent.putExtra(SendWifiDataService.EXTRAS_MESSAGE_LIST, message_list);
             intent.putExtra("MESSENGER", new Messenger(sendDataServiceHandler));
             intent.putExtra("send_data", true);
+            intent.putExtra("file_name", file_name);
 
             Log.d(this.TAG, "MESSAGE SIZE: " + message.length());
 
@@ -839,31 +849,37 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
     }
 
-    public void saveData(String data){
+    public static String saveData(String data, String mobile_number, String file_name, Context context){
 
-        String file_name = createFile(data);
-        FileDataDAO fileDataDAO = new FileDataDAO(this);
+
+        file_name = createFile(data, mobile_number, file_name);
+
+        FileDataDAO fileDataDAO = new FileDataDAO(context);
         FileData fileData = new FileData(file_name);
         fileDataDAO.addData(fileData);
+        return file_name;
     }
 
-    public String createFile(String data){
+    public static String createFile(String data, String mobile_number, String file_name){
         String file_type = ".txt";
         String folder_name = Environment.getExternalStorageDirectory()+ "/hybridmanetdtn";
         File folder = new File(folder_name);
         Date cDate = new Date();
         String fDate = new SimpleDateFormat("yyyyMMdd-HHmmss").format(cDate);
-        String file_name = folder_name + "/data_" + fDate + file_type;
-        Log.e(TAG, file_name);
+        if(file_name == null)
+            file_name = "data_" + fDate + "_" + mobile_number + file_type;
+        String absolute_file_name = folder_name + "/" + file_name;
+        Log.e(TAG, "FILE NAME: " + file_name);
         boolean success = true;
         if (!folder.exists()) {
             success = folder.mkdir();
         }
         if (success) {
 
-            File file = new File(file_name);
+            File file = new File(absolute_file_name);
             try {
                 file.createNewFile();
+                Log.d(HybridMANETDTN.TAG, "ABS FILE PATH: " + absolute_file_name);
                 FileOutputStream fOut = new FileOutputStream(file);
                 OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
                 myOutWriter.append(data);

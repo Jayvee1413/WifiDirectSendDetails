@@ -21,6 +21,7 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
 
     private WifiAcceptThread wifiAcceptThread;
     Context context;
+    private String file_name;
 
     public StartReceiverService(Context context){
         Log.d(HybridMANETDTN.TAG, "START RECEIVER CONSTRUCTOR");
@@ -100,11 +101,17 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
                 try {
                     bytes = inputStream.read(buffer);
                     String receivedMessage = new String(buffer, 0, bytes);
-                    Log.d(HybridMANETDTN.TAG, "GOT MESSAGE: " + receivedMessage.substring(receivedMessage.length() - 6));
-                    Log.d(HybridMANETDTN.TAG, "FULL MESSAGE LENGTH: " + fullMessage.length());
-                    fullMessage += receivedMessage;
-                    counter += receivedMessage.length();
-                    Log.d(HybridMANETDTN.TAG, "COUNTER LENGTH: " + counter);
+                    if(receivedMessage.startsWith("<FILENAME>")){
+                        file_name = receivedMessage.replace("<FILENAME>", "");
+                        file_name = file_name.replace("</FILENAME>", "");
+                    } else {
+                        Log.d(HybridMANETDTN.TAG, "GOT MESSAGE: " + receivedMessage.substring(receivedMessage.length() - 6));
+                        Log.d(HybridMANETDTN.TAG, "FULL MESSAGE LENGTH: " + fullMessage.length());
+                        fullMessage += receivedMessage;
+                        counter += receivedMessage.length();
+                        Log.d(HybridMANETDTN.TAG, "COUNTER LENGTH: " + counter);
+                    }
+
 
                     if (receivedMessage.substring(receivedMessage.length() - 6).equals("</END>")) {
                         Log.d(HybridMANETDTN.TAG, "GOT END, STOP!!!");
@@ -140,6 +147,7 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
                 Double longitude = json_data.getDouble("longitude");
                 String image = json_data.getString("image");
                 String status = "QUEUED";
+                Log.i(HybridMANETDTN.TAG, "NUMBER: " + number);
                 Log.i(HybridMANETDTN.TAG, "NAME: " + name);
                 Log.i(HybridMANETDTN.TAG, "AGE: " + age);
                 Log.i(HybridMANETDTN.TAG, "ADDRESS: " + address);
@@ -153,6 +161,11 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
                 DataDAO data_dao = new DataDAO(context);
                 Data data = new Data(number, name, age, address, message, latitude, longitude, image);
                 data_dao.addData(data);
+
+                String file_string = json_data.toString();
+                Log.d(HybridMANETDTN.TAG, "SAVING TO FILE: " + file_name);
+                HybridMANETDTN.saveData(file_string, number, file_name, context);
+
 
             } catch (JSONException e) {
                 Log.e(HybridMANETDTN.TAG, e.getMessage());
