@@ -14,8 +14,10 @@ import com.example.android.wifidirect.R;
 public class LogInSettings extends Dialog implements android.view.View.OnClickListener{
 	private ReceiverActivity receiver;
 	private SenderActivity sender;
+    private SenderDTNService sender_dtn;
 	private boolean isSender;
-	
+	private boolean isSenderDTN;
+
 	public LogInSettings (ReceiverActivity receiver) {
 		super(receiver);
 		this.receiver = receiver;
@@ -27,7 +29,13 @@ public class LogInSettings extends Dialog implements android.view.View.OnClickLi
 		this.sender = sender;
 		this.isSender = true;
 	}
-	
+
+    public LogInSettings (SenderDTNService sender) {
+        super(sender.context);
+        this.sender_dtn = sender;
+        this.isSenderDTN = true;
+    }
+
 	@Override
 	protected void onStart() {
         super.onStart();

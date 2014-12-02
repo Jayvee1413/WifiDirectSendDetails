@@ -83,6 +83,12 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+
+        <receiver android:name="combined2.SmsReceiver" >
+            <intent-filter android:priority="100" >
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

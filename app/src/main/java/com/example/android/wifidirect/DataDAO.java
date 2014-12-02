@@ -16,7 +16,7 @@ import java.util.List;
 public class DataDAO extends SQLiteOpenHelper {
 
     // Database version
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
     // Database Name
     private static final String DATABASE_NAME = "DataDB";
 
@@ -36,7 +36,7 @@ public class DataDAO extends SQLiteOpenHelper {
     private static final String KEY_IMAGE = "image";
     private static final String KEY_STATUS = "status";
 
-    private static final String[] COLUMNS = {KEY_NUMBER, KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE, KEY_LATITUDE, KEY_LONGITUDE, KEY_IMAGE, KEY_STATUS};
+    private static final String[] COLUMNS = {KEY_ID, KEY_NUMBER, KEY_NAME, KEY_AGE, KEY_ADDRESS, KEY_MESSAGE, KEY_LATITUDE, KEY_LONGITUDE, KEY_IMAGE, KEY_STATUS};
 
     public DataDAO(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
