@@ -24,6 +24,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.Settings;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.Base64;
 import android.view.Menu;
@@ -53,7 +56,9 @@ import java.util.Set;
 import java.io.InputStream;
 
 
+import combined2.Base64FileEncoder;
 import combined2.FileExplore;
+import combined2.SenderDTNService;
 
 
 public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListListener, DeviceActionListener, WifiP2pManager.ConnectionInfoListener{
@@ -118,6 +123,8 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     public static final int BT_MESSAGE_WRITE = 3;
     public static final int BT_MESSAGE_TOAST = 4;
     public static final int BT_NEXT_PEER = 5;
+    public static final int BT_MESSAGE_READ_FILE_NAME = 6;
+    public String BT_FILE_NAME;
     //Intent
     public static final int REQUEST_ENABLE_BT = 1;
 
@@ -129,6 +136,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
     private BluetoothConnService mConnService = null;
     // ENDFOR BLUETOOTH
 
+
+    TelephonyManager Tel;
+    MyPhoneStateListener MyListener;
+    public int currentSignalStrength = 0;
 
     private final Handler sendDataServiceHandler = new Handler(){
 
@@ -145,11 +156,18 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
     };
 
+    Context context = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.context = this.getBaseContext();
         this.wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        MyListener = new MyPhoneStateListener();
+        Tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+
         this.turnOnRadios();
         this.makeDiscoverable();
         this.turnOnGPS();
@@ -181,10 +199,22 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 }
 
                 file_name = saveData(data_message, mobile_number, null, getApplicationContext());
+                convertFilesToPackets();
                 data_message_list.add(data_message);
                 Log.d(TAG, "MESSAGE: " + data_message);
-                discoverWiFiPeers();
-                //doBluetoothDiscovery();
+
+                //if(currentSignalStrength > 0){
+                //    Intent intent = new Intent(context, SenderDTNService.class);
+                //    intent.putExtra("start?", "start converting");
+                //    context.startService(intent);
+                //    intent = new Intent(context, SenderDTNService.class);
+                //    intent.putExtra("start?", "start sending");
+                //    context.startService(intent);
+                //} else {
+
+                    //discoverWiFiPeers();
+                    doBluetoothDiscovery();
+                //}
             }
         });
 
@@ -199,8 +229,19 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     data_message_list.add(data_message);
                 }
                 Log.d(TAG, "MESSAGE: " + data_message);
-                discoverWiFiPeers();
-                doBluetoothDiscovery();
+
+                if(currentSignalStrength > 0){
+                    Intent intent = new Intent(context, SenderDTNService.class);
+                    intent.putExtra("start?", "start converting");
+                    context.startService(intent);
+                    intent = new Intent(context, SenderDTNService.class);
+                    intent.putExtra("start?", "start sending");
+                    context.startService(intent);
+                } else {
+
+                    discoverWiFiPeers();
+                    doBluetoothDiscovery();
+                }
             }
         });
 
@@ -309,13 +350,12 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         this.registerReceiver(mReceiver, filter);
 
-
         IntentFilter mySendWifiDataServiceReceiverfilter = new IntentFilter(mySendWifiDataServiceReceiver.PROCESS_RESPONSE);
         filter.addCategory(Intent.CATEGORY_DEFAULT);
         mySendWifiDataServiceReceiver = new MySendWifiDataServiceReceiver();
         registerReceiver(mySendWifiDataServiceReceiver, mySendWifiDataServiceReceiverfilter);
 
-
+        Tel.listen(MyListener,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
 
     }
@@ -327,6 +367,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         unregisterReceiver(mReceiver);
         unregisterReceiver(mySendWifiDataServiceReceiver);
         Intent intent = new Intent(this, StartReceiverService.class);
+        Tel.listen(MyListener, PhoneStateListener.LISTEN_NONE);
         this.stopService(intent);
     }
 
@@ -643,7 +684,16 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                             Log.d(TAG,"Connected!!!! Sending...");
                             Log.d(TAG,"isBTSender " + (isBTSender ? "YES" : "NO"));
                             if (isBTSender){
-                                sendBTMessage(data_message);
+                                // GET ALL PACKETS TO BE SENT
+                                PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                                List<PacketData> packetDataList = packetDataDAO.getAllPackets(1000);
+
+                                for(PacketData packetData: packetDataList) {
+                                    String packetString = packetData.getPacketData().toString();
+                                    sendBTMessage(packetString);
+                                }
+
+                                //sendBTMessage(data_message);
                             }
                             //mConversationArrayAdapter.clear();
                             break;
@@ -672,9 +722,23 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                     String readMessage = (String) msg.obj;
                     Log.d(HybridMANETDTN.TAG,"Saving Message to DB "+readMessage);
                     if(readMessage.length() > 0 && !readMessage.equals("ACK")){
-                        saveDataDAO(readMessage);
+                        //saveDataDAO(readMessage);
+                        JSONObject json_data = null;
+                        try {
+                            json_data = new JSONObject(readMessage);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        PacketData packetData = new PacketData(json_data);
+                        PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                        packetDataDAO.addData(packetData);
                     }
                     break;
+
+                case BT_MESSAGE_READ_FILE_NAME:
+                    BT_FILE_NAME = (String) msg.obj;
+                    break;
+
                 case BT_MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                             Toast.LENGTH_SHORT).show();
@@ -697,6 +761,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         // Check that there's actually something to send
         if (message.length() > 0) {
+            mConnService.write(new String("<FILENAME>"+file_name+"</FILENAME>").getBytes());
             message += "</END>";
             // Get the message bytes and tell the BluetoothChatService to write
             byte[] send = message.getBytes();
@@ -860,6 +925,30 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         return file_name;
     }
 
+    public void convertFilesToPackets(){
+        FileDataDAO fileDataDAO = new FileDataDAO(context);
+        List<FileData> fileDataList = fileDataDAO.getAllFiles();
+
+        for (FileData fileData : fileDataList) {
+            if (fileData.getStatus().equals("QUEUED")) {
+                // Start Sending Data To HQ
+                String fileName = fileData.getName();
+                try {
+                    ArrayList<String> packetList = Base64FileEncoder.encodeFile(fileName, fileName + ".gz");
+                    //SAVE PACKET TO DB
+                    for (int i = 0; i < packetList.size(); i++) {
+                        PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                        packetDataDAO.addData(new PacketData(fileName, i, packetList.size(), packetList.get(i), "QUEUED", "QUEUED"));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                fileData.setStatus("PROCESSED");
+                fileDataDAO.updateFile(fileData);
+            }
+        }
+    }
+
     public static String createFile(String data, String mobile_number, String file_name){
         String file_type = ".txt";
         String folder_name = Environment.getExternalStorageDirectory()+ "/hybridmanetdtn";
@@ -894,5 +983,18 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         }
         return "";
     }
+
+    private class MyPhoneStateListener extends PhoneStateListener {
+		/*
+		 * Get the Signal strength from the provider, each tiome there is an
+		 * update
+		 */
+
+        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+            super.onSignalStrengthsChanged(signalStrength);
+            currentSignalStrength = signalStrength.getGsmSignalStrength();
+
+        }
+    };/* End of private Class */
 
 }

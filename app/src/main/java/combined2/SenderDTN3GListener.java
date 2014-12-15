@@ -82,7 +82,6 @@
              sender.setTracker(getCurrentPacket());
              for (int i = 0; i < 10; i ++) {
                  sendPackets(chat, time);
-                 sender.setText3G(Integer.toString(sender.threeGCount));
                  waiting(2);
              }
          }
@@ -122,15 +121,10 @@
                  reply.setBody(packet);
 
                  chat.sendMessage(reply);
-                 sender.threeGCount++;
 
 
-                 try {
-                     time.setToNow();
-                     sender.getWriter().write(time.toString() + " : Packet " + getCurrentPacket() +  "Sent Via 3G\n");
-                 } catch (IOException e) {
-                     e.printStackTrace();
-                 }
+                 time.setToNow();
+
 
                  Log.e("XMPPSender:Sending", "Sending text [" + reply.getBody() + "] SUCCESS");
              }

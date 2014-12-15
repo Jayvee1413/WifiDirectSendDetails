@@ -41,7 +41,8 @@ public class FileDataDAO extends SQLiteOpenHelper {
         String CREATE_FILE_TABLE = "CREATE TABLE file ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name VARCHAR(60), " +
-                "status VARCHAR(10) DEFAULT 'QUEUED')";
+                "status VARCHAR(10) DEFAULT 'QUEUED', "+
+                ")";
 
         //create data table
         db.execSQL(CREATE_FILE_TABLE);

@@ -83,8 +83,12 @@
             android:enabled="true"
             android:exported="true" >
         </service>
-
-        <receiver android:name="combined2.SmsReceiver" >
+        <service
+            android:name="combined2.SenderDTNService"
+            android:enabled="true"
+            android:exported="true">
+        </service>
+        <receiver android:name="combined2.SmsDTNReceiver" >
             <intent-filter android:priority="100" >
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>

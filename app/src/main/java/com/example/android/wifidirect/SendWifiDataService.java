@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by vincentsantos on 11/22/14.
@@ -60,11 +61,17 @@ public class SendWifiDataService extends IntentService {
                     //OutputStreamWriter output_writer = new OutputStreamWriter(stream);
                     // SEND FIRST LINE
                     stream.write(new String("<FILENAME>"+file_name+"</FILENAME>").getBytes());
-                    for(String message_data: message_list) {
-                        Log.d(HybridMANETDTN.TAG, "SENDING MESSAGE: " + message_data);
-                        Log.d(HybridMANETDTN.TAG, "MESSAGE LENGTH: " + message_data.length());
 
-                        stream.write((message_data + "</END>").getBytes());
+                    // GET ALL PACKETS TO BE SENT
+                    PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                    List<PacketData> packetDataList = packetDataDAO.getAllPackets(1000);
+
+                    for(PacketData packetData: packetDataList) {
+                        String packetString = packetData.getPacketData().toString();
+                        Log.d(HybridMANETDTN.TAG, "SENDING MESSAGE: " + packetString);
+                        Log.d(HybridMANETDTN.TAG, "MESSAGE LENGTH: " + packetString.length());
+
+                        stream.write((packetString + "</END>").getBytes());
                         //output_writer.write(message_data);
                     }
                     //output_writer.close();

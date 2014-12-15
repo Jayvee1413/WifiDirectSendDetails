@@ -29,7 +29,7 @@ public class Base64FileEncoder {
 	}
 
 	private static void encodeStream (InputStream in, BufferedWriter out) throws IOException {
-		int lineLength = 148;
+		int lineLength = 100;
 		byte[] buf = new byte[lineLength/4*3];
 		while (true) {
 		   int len = in.read(buf);

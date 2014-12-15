@@ -138,6 +138,11 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
             JSONObject json_data = null;
             try {
                 json_data = new JSONObject(result);
+                PacketData packetData = new PacketData(json_data);
+                PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                packetDataDAO.addData(packetData);
+
+                /*
                 String number = json_data.getString("number");
                 String name = json_data.getString("name");
                 String age = json_data.getString("age");
@@ -165,6 +170,8 @@ public class StartReceiverService extends AsyncTask<Void, Void, Void> {
                 String file_string = json_data.toString();
                 Log.d(HybridMANETDTN.TAG, "SAVING TO FILE: " + file_name);
                 HybridMANETDTN.saveData(file_string, number, file_name, context);
+                */
+
 
 
             } catch (JSONException e) {

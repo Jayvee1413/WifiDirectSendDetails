@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 15
+    compileSdkVersion 14
     buildToolsVersion "20.0.0"
 
     defaultConfig {
@@ -12,14 +12,12 @@ android {
 
     buildTypes {
         release {
-            runProguard false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            minifyEnabled false
         }
     }
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:18.0.0'
     compile files('src/main/libs/asmack-2010.05.07.jar')
     compile files('src/main/libs/commons-io-2.4.jar')
 }

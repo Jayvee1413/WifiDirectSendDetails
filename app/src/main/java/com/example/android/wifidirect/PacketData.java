@@ -17,6 +17,16 @@ public class PacketData {
     private int packet_no;
     private String packet;
     private String status;
+
+    public String getPeer_status() {
+        return peer_status;
+    }
+
+    public void setPeer_status(String peer_status) {
+        this.peer_status = peer_status;
+    }
+
+    private String peer_status;
     private int total_packet_cnt;
 
     public int getTotal_packet_cnt() {
@@ -73,7 +83,7 @@ public class PacketData {
 
     }
 
-    public PacketData(String file_name, int packet_no, int total_packet_cnt, String packet, String status){
+    public PacketData(String file_name, int packet_no, int total_packet_cnt, String packet, String status, String peer_status){
         super();
         this.file_name = file_name;
         this.packet_no = packet_no;
@@ -83,9 +93,27 @@ public class PacketData {
             this.status = "QUEUED";
         else
             this.status = status;
+        if(peer_status == null)
+            this.peer_status = "QUEUED";
+        else
+            this.peer_status = status;
+    }
+
+    public PacketData(JSONObject jsonObject){
+        super();
+        try{
+            this.file_name = jsonObject.getString("file_name");
+            this.packet_no = jsonObject.getInt("packet_no");
+            this.total_packet_cnt = jsonObject.getInt("total_packet_cnt");
+            this.packet = jsonObject.getString("packet");
+            this.status = jsonObject.getString("status");
+            this.peer_status = jsonObject.getString("peer_status");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
     
-    public JSONObject getFileData(){
+    public JSONObject getPacketData(){
         JSONObject json_data = new JSONObject();
         try {
             json_data.put("file_name", this.file_name);
@@ -93,6 +121,7 @@ public class PacketData {
             json_data.put("total_packet_cnt", this.total_packet_cnt);
             json_data.put("packet", this.packet);
             json_data.put("status", this.status);
+            json_data.put("peer_status", this.peer_status);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -102,7 +131,7 @@ public class PacketData {
 
 
     public String toString(){
-        JSONObject json_data = getFileData();
+        JSONObject json_data = getPacketData();
         Iterator<?> keys = json_data.keys();
         String output = "";
 

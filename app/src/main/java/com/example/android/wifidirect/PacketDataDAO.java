@@ -16,7 +16,7 @@ import java.util.List;
 public class PacketDataDAO extends SQLiteOpenHelper {
 
     // Database version
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     // Database Name
     private static final String DATABASE_NAME = "PacketDB";
 
@@ -31,8 +31,9 @@ public class PacketDataDAO extends SQLiteOpenHelper {
     private static final String KEY_PACKET = "packet_no";
     private static final String KEY_TOTAL_PACKET_CNT = "total_packet_cnt";
     private static final String KEY_STATUS = "status";
+    private static final String KEY_PEER_STATUS = "status";
 
-    private static final String[] COLUMNS = {KEY_ID, KEY_FILE_NAME, KEY_PACKET_NO, KEY_TOTAL_PACKET_CNT, KEY_PACKET, KEY_STATUS};
+    private static final String[] COLUMNS = {KEY_ID, KEY_FILE_NAME, KEY_PACKET_NO, KEY_TOTAL_PACKET_CNT, KEY_PACKET, KEY_STATUS, KEY_PEER_STATUS};
 
     public PacketDataDAO(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -41,16 +42,18 @@ public class PacketDataDAO extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db){
         // SQL statement to create data table
-        String CREATE_FILE_TABLE = "CREATE TABLE file ( " +
+        String CREATE_FILE_TABLE = "CREATE TABLE packet ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "file_name VARCHAR(60), " +
                 "packet_no int(11), " +
                 "total_packet_cnt int(11), " +
                 "packet varchar(200), " +
-                "status VARCHAR(10) DEFAULT 'QUEUED')";
-
+                "status VARCHAR(10) DEFAULT 'QUEUED'" +
+                "peer_status VARCHAR(10) DEFAULT 'QUEUED')";
+        String CREATE_UNIQUE_INDEX = "CREATE UNIQUE INDEX packet_index on packet (file_name, packet_no)";
         //create data table
         db.execSQL(CREATE_FILE_TABLE);
+        db.execSQL(CREATE_UNIQUE_INDEX);
     }
 
     @Override
@@ -133,7 +136,41 @@ public class PacketDataDAO extends SQLiteOpenHelper {
         return packetDataList;
     }
 
-    public int updateFile(PacketData packetData) {
+    public List<PacketData> getAllPackets(int limit) {
+        List<PacketData> packetDataList = new ArrayList<PacketData>();
+
+        // 1. build the query
+        String query = "SELECT  * FROM " + TABLE_DATA + " LIMIT " + limit;
+
+        // 2. get reference to writable DB
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(query, null);
+
+        // 3. go over each row, build Data and add it to list
+        PacketData packetData = null;
+        if (cursor.moveToFirst()) {
+            do {
+                packetData = new PacketData();
+                packetData.setId(Integer.parseInt(cursor.getString(0)));
+                packetData.setFile_name(cursor.getString(cursor.getColumnIndex(KEY_FILE_NAME)));
+                packetData.setPacket(cursor.getString(cursor.getColumnIndex(KEY_PACKET)));
+                packetData.setStatus(cursor.getString(cursor.getColumnIndex(KEY_STATUS)));
+                packetData.setPacket_no(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_PACKET_NO))));
+                packetData.setTotal_packet_cnt(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_TOTAL_PACKET_CNT))));
+
+
+                // Add Data to Data
+                packetDataList.add(packetData);
+            } while (cursor.moveToNext());
+        }
+
+        Log.d(HybridMANETDTN.TAG, packetDataList.toString());
+
+        // return data_list
+        return packetDataList;
+    }
+
+    public int updatePacket(PacketData packetData) {
 
         // 1. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();
@@ -145,6 +182,7 @@ public class PacketDataDAO extends SQLiteOpenHelper {
         values.put(KEY_PACKET_NO, packetData.getPacket_no());
         values.put(KEY_TOTAL_PACKET_CNT, packetData.getTotal_packet_cnt());
         values.put(KEY_STATUS, packetData.getStatus());
+        values.put(KEY_PEER_STATUS, packetData.getPeer_status());
 
         // 3. updating row
         int i = db.update(TABLE_DATA, //table
@@ -159,7 +197,7 @@ public class PacketDataDAO extends SQLiteOpenHelper {
 
     }
 
-    public void deleteFile(PacketData packetData) {
+    public void deletePacket(PacketData packetData) {
 
         // 1. get reference to writable DB
         SQLiteDatabase db = this.getWritableDatabase();

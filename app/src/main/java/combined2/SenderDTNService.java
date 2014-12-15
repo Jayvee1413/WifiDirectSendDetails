@@ -12,9 +12,12 @@ import android.net.wifi.WifiManager;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.android.wifidirect.FileData;
 import com.example.android.wifidirect.FileDataDAO;
@@ -34,10 +37,13 @@ import org.jivesoftware.smack.packet.Presence;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SenderDTNService extends IntentService {
-    private String phoneNum = "+639996735511";
+    private String phoneNum = "+639178133292";
 
     private ArrayList<String> sender_packetList = new ArrayList<String>();
     private BroadcastReceiver threeGMonitorBroadcastReceiver;
@@ -62,24 +68,25 @@ public class SenderDTNService extends IntentService {
 
     CountDownTimer timer;
 
-    TelephonyManager Tel;
     Handler handler;
 
     Context context;
 
     private ArrayList<String> packetList;
 
-    public static ConverterThread converterThread = null;
-    public static PacketCompilerThread packetCompilerThread = null;
+    private List<FileData> fileDataList;
+    private Iterator<FileData> fileDataListIterator;
+    FileData current_fileData;
+    public int currentSignalStrength = 0;
 
-    public static String currentFileName = "";
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
-     */
-    public SenderDTNService(String name, Context context) {
+    public SenderDTNService(){
+        this("SenderDTNService");
+
+    }
+    public SenderDTNService(String name) {
         super(name);
+        context = this;
+
         threeGMonitorBroadcastReceiver = new BroadcastReceiver() {
 
             public void onReceive(Context context, Intent intent) {
@@ -140,29 +147,150 @@ public class SenderDTNService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         context.unregisterReceiver(threeGMonitorBroadcastReceiver);
+        context.registerReceiver(threeGMonitorBroadcastReceiver, gIntentFilter);
 
-        if(isOnline(context) && intent.getStringExtra("isOnline").equals("1")){
-            receiverIsOnline = true;
-            is3g = true;
+        //////////////////////////////////////////////////////////////////////////
+        if ((intent.getStringExtra("start?").toString()).equals("start converting")) {
+
+            FileDataDAO fileDataDAO = new FileDataDAO(context);
+            fileDataList = fileDataDAO.getAllFiles();
+
+            for (FileData fileData : fileDataList) {
+                if (fileData.getStatus().equals("QUEUED")) {
+                    // Start Sending Data To HQ
+                    String fileName = fileData.getName();
+                    try {
+                        packetList = Base64FileEncoder.encodeFile(fileName, fileName + ".gz");
+                        //SAVE PACKET TO DB
+                        for (int i = 0; i < packetList.size(); i++) {
+                            PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                            packetDataDAO.addData(new PacketData(fileName, i, packetList.size(), packetList.get(i), "QUEUED", "QUEUED"));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    fileData.setStatus("PROCESSED");
+                    fileDataDAO.updateFile(fileData);
+                }
+            }
+
+            fileDataDAO = new FileDataDAO(context);
+            fileDataList = fileDataDAO.getAllFiles();
+            fileDataListIterator = fileDataList.iterator();
+
+            if(fileDataListIterator.hasNext()){
+                while(true) {
+                    current_fileData = fileDataListIterator.next();
+                    if(current_fileData.getStatus().equals("PROCESSED")){
+                        break;
+                    }
+                }
+                PacketDataDAO packetDataDAO = new PacketDataDAO(context);
+                List<PacketData> packetDataList = packetDataDAO.getAllPackets(current_fileData.getName());
+                for(PacketData packetData: packetDataList){
+                    sender_packetList = new ArrayList<String>();
+                    sender_packetList.add(packetData.getPacket_no(), packetData.getPacket());
+                }
+            }
+
         }
-        if(converterThread == null){
-            converterThread = new ConverterThread();
-            converterThread.start();
+
+        //////////////////////////////////////////////////////////////////////////
+        if ((intent.getStringExtra("start?").toString())
+                .equals("start sending")) {
+            Log.e("START SENDING", "START SENDING");
+
+            // DEPENDE SA KUNG ANONG CHANNEL
+            Thread smsThread = new smsThread();
+            smsThread.start();
+
+            if (isOnline(context)
+                    && intent.getStringExtra("isOnline").equals("1")) {
+                receiverIsOnline = true;
+                is3g = true;
+            }
+            started = true;
+            registerReceiver(threeGMonitorBroadcastReceiver, gIntentFilter);
+
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        if ((intent.getStringExtra("start?").toString())
+                .equals("done receiving")) {
+
+            done = true;
+            FileDataDAO fileDataDAO = new FileDataDAO(context);
+            current_fileData.setStatus("DONE");
+            fileDataDAO.updateFile(current_fileData);
+            Toast.makeText(getBaseContext(), "Done Sending", Toast.LENGTH_SHORT);
+            unregisterReceiver(threeGMonitorBroadcastReceiver);
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        if ((intent.getStringExtra("start?").toString()).equals("sendAgain")) {
+            check10Received = true;
+            Log.i("sendAgain", "inside sendAgain");
+            String resend = intent.getStringExtra("resendPackets");
+            if (resend.equals("none")) {
+                // do nothing
+            } else {
+                String[] num;
+                num = resend.split(" ");
+                send10Resends = 0;
+                for (int i = 0; i < num.length; i++) {
+                    String expression = "[-+]?[0-9]*\\.?[0-9]+$";
+                    CharSequence inputStr = num[i];
+                    Pattern pattern = Pattern.compile(expression);
+                    Matcher matcher = pattern.matcher(inputStr);
+
+                    if (matcher.matches()) {
+                        Log.e("-----NUM[i]-----", num[i]);
+                        int j = Integer.parseInt(num[i]);
+                        Log.e("RESEND LIST", num[i]);
+                        sendSMS(phoneNum, "&% " + j + " " + sender_packetList.get(j));
+                        Log.i("RESENT", sender_packetList.get(j));
+                        send10Resends++;
+                    }
+
+                }
+
+            }
+
             try {
-                converterThread.join();
-            } catch (InterruptedException e) {
+                Log.i("send10", "Before send10");
+                if (send10Resends < 5) {
+                    send10(phoneNum);
+                    // continue with sms since resends < 5
+                } else {
+                    // WAIT FOR 5 MINUTES THEN SEND 10
+                    waiting(300);
+                    send10(phoneNum);
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        if(packetCompilerThread == null){
-            packetCompilerThread = new PacketCompilerThread(intent);
-            packetCompilerThread.start();
-            try {
-                packetCompilerThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+
+        //////////////////////////////////////////////////////////////////////////
+
+        if ((intent.getStringExtra("start?").toString())
+                .equals("receiverConnectivity")) {
+            Log.e("RECEIVER CONNECTIVITY","RECEIVER CONNECTIVITY");
+            headtracker = Integer.parseInt(intent.getStringExtra("tracker")
+                    .toString());
+            Log.e("HEAD TRACKER", ""+headtracker);
+            Log.e("IS ONLINE?", ""+intent.getCharExtra("isOnline", '0'));
+            if (intent.getCharExtra("isOnline", '9')=='1') {
+                receiverIsOnline = true;
+                if (isOnline(context)) {
+                    Log.e("SHIFT TO 3G","SHIFT TO 3G");
+                    sendBy3G("yetanotherslave@gmail.com", headtracker);
+                }
+
+
             }
         }
+
     }
 
     //THREADS
@@ -173,113 +301,10 @@ public class SenderDTNService extends IntentService {
                 sendViaSms(phoneNum, headtracker);
                 Log.e("smsThread","Inside smsThread");
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
 
-    }
-
-    class ConverterThread extends Thread {
-        public void run(){
-            FileDataDAO fileDataDAO = new FileDataDAO(context);
-            List<FileData> fileDataList = fileDataDAO.getAllFiles();
-
-            for(FileData fileData: fileDataList){
-                if(fileData.getStatus().equals("QUEUED")){
-                    // Start Sending Data To HQ
-                    String fileName = fileData.getName();
-                    try {
-                        packetList = Base64FileEncoder.encodeFile(fileName, fileName+".gz");
-                        //SAVE PACKET TO DB
-                        for(int i=0; i<packetList.size(); i++){
-                            PacketDataDAO packetDataDAO = new PacketDataDAO(context);
-                            packetDataDAO.addData(new PacketData(fileName, i,  packetList.size(), packetList.get(i), "QUEUED" ));
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    fileData.setStatus("PROCESSED");
-                    fileDataDAO.updateFile(fileData);
-                }
-            }
-        }
-    }
-
-    class PacketCompilerThread extends Thread {
-        Intent intent;
-
-        public PacketCompilerThread(Intent intent){
-            super();
-            this.intent = intent;
-        }
-
-        public void run(){
-            FileDataDAO fileDataDAO = new FileDataDAO(context);
-            List<FileData> fileDataList = fileDataDAO.getAllFiles();
-
-            for(FileData fileData: fileDataList) {
-                if(fileData.getStatus().equals("PROCESSED")){
-                    PacketDataDAO packetDataDAO = new PacketDataDAO(context);
-                    List<PacketData> packetDataList = packetDataDAO.getAllPackets(fileData.getName());
-                    currentFileName = fileData.getName();
-                    for(PacketData packetData: packetDataList){
-                        sender_packetList = new ArrayList<String>();
-                        sender_packetList.add(packetData.getPacket_no(), packetData.getPacket());
-                    }
-
-                    // START SENDER THREAD
-
-                    PacketSenderThread packetSenderThread = new PacketSenderThread(intent);
-                    packetSenderThread.start();
-                    try {
-                        packetSenderThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-            }
-
-        }
-    }
-
-    class PacketSenderThread  extends Thread{
-        Intent intent;
-
-        public PacketSenderThread(Intent intent){
-            this.intent = intent;
-        }
-
-        public void run(){
-            smsThread smsThread = new smsThread();
-            smsThread.start();
-            if (isOnline(context)
-                    && intent.getStringExtra("isOnline").equals("1")) {
-                receiverIsOnline = true;
-                is3g = true;
-                //Thread threegthread = new threeGThread();
-                //threegthread.start();
-            } else {
-                receiverIsOnline = false;
-                is3g = false;
-                /*
-				receiverIsOnline = false;
-				handler.post(new Runnable() {
-
-					public void run() {
-						txtCurrentChannel.setText("MMS");
-					}
-				});
-				is3g = false;
-				Log.e("INITIAL MMSTHREAD", "I AM AT BRECEIVER");
-				sendViaMms(headtracker);
-				*/
-            }
-            started = true;
-            context.registerReceiver(threeGMonitorBroadcastReceiver, gIntentFilter);
-        }
     }
 
 
@@ -289,19 +314,13 @@ public class SenderDTNService extends IntentService {
     // FUNCTIONS FOR SMS CHANNEL
 
     public void sendViaSms(String phoneNo, int startIndex) throws IOException {
-
         sendSMS(phoneNum, "%& sendViaSms" + startIndex);
-
-
-
         send10(phoneNo);
-
-
     }
 
     private void send10(String phoneNo) throws IOException {
-        String submessage = new String();
-        String headerBegin = new String();
+        String submessage = "";
+        String headerBegin = "";
 
         Log.i("send10", "I AM AT send10");
         timer.cancel();
@@ -310,10 +329,8 @@ public class SenderDTNService extends IntentService {
         for (int counter = 0; counter < 10 && tailtracker > headtracker ; counter++) {
             Log.i("send10", "inside send10 for loop");
             headerBegin = "&% " + tailtracker + " ";
-            submessage = headerBegin + packetList.get(tailtracker);
+            submessage = headerBegin + sender_packetList.get(tailtracker);
             tailtracker--;
-
-
 
             Log.i("SUBMESSAGE", submessage);
             Log.i("PHONE NUMBER", phoneNo);
@@ -387,7 +404,7 @@ public class SenderDTNService extends IntentService {
     // FOR 3G CHANNEL
 
     public ArrayList<String> getPacketList() {
-        return this.packetList;
+        return this.sender_packetList;
     }
 
     public Integer getTracker() {
@@ -553,5 +570,7 @@ public class SenderDTNService extends IntentService {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
 
 }
