@@ -16,7 +16,7 @@ import java.util.List;
 public class DataDAO extends SQLiteOpenHelper {
 
     // Database version
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 1;
     // Database Name
     private static final String DATABASE_NAME = "DataDB";
 

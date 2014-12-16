@@ -16,7 +16,7 @@ import java.util.List;
 public class PacketDataDAO extends SQLiteOpenHelper {
 
     // Database version
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 1;
     // Database Name
     private static final String DATABASE_NAME = "PacketDB";
 
@@ -48,7 +48,7 @@ public class PacketDataDAO extends SQLiteOpenHelper {
                 "packet_no int(11), " +
                 "total_packet_cnt int(11), " +
                 "packet varchar(200), " +
-                "status VARCHAR(10) DEFAULT 'QUEUED'" +
+                "status VARCHAR(10) DEFAULT 'QUEUED', " +
                 "peer_status VARCHAR(10) DEFAULT 'QUEUED')";
         String CREATE_UNIQUE_INDEX = "CREATE UNIQUE INDEX packet_index on packet (file_name, packet_no)";
         //create data table

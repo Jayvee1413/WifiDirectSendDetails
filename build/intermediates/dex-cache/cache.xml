@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<pre-dex-items>
+<items version="2" >
 
     <item
-        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/asmack-2010.05.07-21ceead288164612ee39102674921e792c85b278.jar"
         jar="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/src/main/libs/asmack-2010.05.07.jar"
         jumboMode="false"
         revision="20.0.0"
-        sha1="78842451dc1b8fec85ab6c16ce80e5f980bf7339"/>
+        sha1="78842451dc1b8fec85ab6c16ce80e5f980bf7339">
+        <dex dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/asmack-2010.05.07-21ceead288164612ee39102674921e792c85b278.jar" />
+    </item>
     <item
-        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/support-v4-18.0.0-aa1f1aa6245e7edff3bd3d40480e4f08a0f0af2f.jar"
-        jar="/Users/vincentsantos/Downloads/adt-bundle-mac-x86_64-20140702/sdk/extras/android/m2repository/com/android/support/support-v4/18.0.0/support-v4-18.0.0.jar"
-        jumboMode="false"
-        revision="20.0.0"
-        sha1="44ec51e9d395a47aab135e5e1b556c0007442156"/>
-    <item
-        dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/commons-io-2.4-68a5d58feb7b151be8d3133a44d692e5f510cee4.jar"
         jar="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/src/main/libs/commons-io-2.4.jar"
         jumboMode="false"
         revision="20.0.0"
-        sha1="b1b6ea3b7e4aa4f492509a4952029cd8e48019ad"/>
+        sha1="b1b6ea3b7e4aa4f492509a4952029cd8e48019ad">
+        <dex dex="/Users/vincentsantos/AndroidStudioProjects/WifiDirectSendDetails/app/build/intermediates/pre-dexed/debug/commons-io-2.4-68a5d58feb7b151be8d3133a44d692e5f510cee4.jar" />
+    </item>
 
-</pre-dex-items>
+</items>

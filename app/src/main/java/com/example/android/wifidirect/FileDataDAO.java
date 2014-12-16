@@ -41,7 +41,7 @@ public class FileDataDAO extends SQLiteOpenHelper {
         String CREATE_FILE_TABLE = "CREATE TABLE file ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name VARCHAR(60), " +
-                "status VARCHAR(10) DEFAULT 'QUEUED', "+
+                "status VARCHAR(10) DEFAULT 'QUEUED'"+
                 ")";
 
         //create data table
@@ -106,16 +106,20 @@ public class FileDataDAO extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 fileData = new FileData();
-                fileData.setId(Integer.parseInt(cursor.getString(0)));
-                fileData.setName(cursor.getString(1));
-                fileData.setStatus(cursor.getString(2));
+                Log.e(HybridMANETDTN.TAG, "CURSOR: " + cursor.getColumnNames()[0]);
+                for(String columnName: cursor.getColumnNames()){
+                    Log.e(HybridMANETDTN.TAG, "FILE "+ columnName + ": " + cursor.getString(cursor.getColumnIndex(columnName)));
+                }
+                fileData.setId(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))));
+                fileData.setName(cursor.getString(cursor.getColumnIndex("name")));
+                fileData.setStatus(cursor.getString(cursor.getColumnIndex("status")));
 
                 // Add Data to Data
                 file_Data_list.add(fileData);
             } while (cursor.moveToNext());
         }
 
-        Log.d(HybridMANETDTN.TAG, file_Data_list.toString());
+        Log.d(HybridMANETDTN.TAG, "FILE DATA LIST SIZE: " + file_Data_list.size());
 
         // return data_list
         return file_Data_list;

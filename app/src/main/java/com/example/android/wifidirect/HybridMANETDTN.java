@@ -181,6 +181,10 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
         {
             findViewById(R.id.image_thumb).setVisibility(View.GONE);
         }
+        //FileDataDAO fileDataDAO = new FileDataDAO(context);
+        //for(FileData fileData: fileDataDAO.getAllFiles()){
+        //    Log.i(HybridMANETDTN.TAG, "FILEDATA: " + fileData.getName());
+        //}
 
         data_message_list = new ArrayList<String>();
 
@@ -921,6 +925,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
 
         FileDataDAO fileDataDAO = new FileDataDAO(context);
         FileData fileData = new FileData(file_name);
+        Log.i(HybridMANETDTN.TAG, "FILE DATA NAME: " + fileData.getName());
         fileDataDAO.addData(fileData);
         return file_name;
     }
@@ -978,7 +983,7 @@ public class HybridMANETDTN extends Activity implements WifiP2pManager.PeerListL
                 Log.e(HybridMANETDTN.TAG, "ERROR CREATING FILE");
                 e.printStackTrace();
             }
-            return file_name;
+            return absolute_file_name;
 
         }
         return "";

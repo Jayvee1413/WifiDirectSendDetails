@@ -25,15 +25,15 @@ public class FileData {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    public void setName(String data) {
+    public void setName(String name) {
         this.name = name;
     }
 
     public String getStatus() {
-        return status;
+        return this.status;
     }
 
     public void setStatus(String status) {

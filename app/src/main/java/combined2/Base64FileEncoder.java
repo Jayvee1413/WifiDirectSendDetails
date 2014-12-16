@@ -2,6 +2,10 @@ package combined2;
 //Sample program to encode a binary file into a Base64 text file.
 //Author: Christian d'Heureuse (www.source-code.biz)
 
+import android.util.Log;
+
+import com.example.android.wifidirect.HybridMANETDTN;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -17,11 +21,13 @@ public class Base64FileEncoder {
 		BufferedInputStream in = null;
 		BufferedWriter out = null;
 		try {
+           Log.i(HybridMANETDTN.TAG, "INPUT FILE NAME: "+ inputFileName);
+           Log.i(HybridMANETDTN.TAG, "OUTPUT FILE NAME: "+ outputFileName);
 		   in = new BufferedInputStream(new FileInputStream(inputFileName));
 		   out = new BufferedWriter(new FileWriter(outputFileName));
 		   encodeStream (in, out);
-		   out.flush(); }
-		 finally {
+		   out.flush();
+        }finally {
 		   if (in != null) in.close();
 		   if (out != null) out.close(); 
 		 }
